@@ -16,7 +16,9 @@
       <el-table :data="summary.items || []" stripe>
         <el-table-column prop="type" label="类型" width="100" />
         <el-table-column prop="score" label="分数" width="100" />
-        <el-table-column prop="time" label="时间" />
+        <el-table-column label="时间">
+          <template #default="scope">{{ fmt(scope.row.time) }}</template>
+        </el-table-column>
       </el-table>
       <el-empty v-if="!summary.items || summary.items.length === 0" description="暂无成绩" />
     </div>

@@ -5,7 +5,7 @@
       <el-row :gutter="16">
         <el-col v-for="c in list" :key="c.id" :span="8" style="margin-bottom: 16px">
           <div class="item">
-            <div class="cover">{{ c.title.slice(0, 8) }}</div>
+            <div class="cover">{{ c.title }}</div>
             <div class="title">{{ c.title }}</div>
             <div class="muted">{{ c.teacherName }} · {{ c.chapterCount }} 章</div>
             <el-progress :percentage="c.progress || 0" style="margin: 10px 0" />

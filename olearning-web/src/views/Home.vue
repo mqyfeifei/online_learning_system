@@ -15,7 +15,7 @@
           <el-row :gutter="16">
             <el-col v-for="c in hotCourses" :key="c.id" :span="8">
               <div class="course-item" @click="router.push(`/courses/${c.id}`)">
-                <div class="cover">{{ c.title.slice(0, 6) }}</div>
+                <div class="cover">{{ c.title }}</div>
                 <div class="course-title">{{ c.title }}</div>
                 <div class="muted">{{ c.teacherName }} · {{ c.chapterCount }} 章</div>
                 <div class="muted">{{ c.studentCount }} 人在学 · {{ c.viewCount }} 次浏览</div>

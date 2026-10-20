@@ -22,6 +22,7 @@ public class StatsService {
     private final ExamRecordMapper recordMapper;
     private final ExamPaperMapper paperMapper;
     private final SubmissionMapper submissionMapper;
+    private final CourseCategoryMapper categoryMapper;
 
     /** 平台统计：管理员首页卡片 */
     public Map<String, Object> platform() {
@@ -39,12 +40,19 @@ public class StatsService {
         data.put("enrollCount", enrollCount);
         data.put("studyCount", studyCount);
         data.put("examCount", examCount);
-        // 课程分类分布，给饼图用
+        // 课程分类分布，给饼图用：key 必须是分类名，不能直接用 categoryId，
+        // 否则前端饼图只能画出「分类 5」这种没有意义的分组
         List<Course> courses = courseMapper.selectList(new LambdaQueryWrapper<Course>()
                 .eq(Course::getStatus, 2));
-        Map<String, Long> byCategory = new HashMap<>();
+        Map<Long, String> categoryNames = new HashMap<>();
+        for (CourseCategory cat : categoryMapper.selectList(null)) {
+            categoryNames.put(cat.getId(), cat.getName());
+        }
+        Map<String, Long> byCategory = new LinkedHashMap<>();
         for (Course c : courses) {
-            String key = c.getCategoryId() == null ? "未分类" : String.valueOf(c.getCategoryId());
+            String key = c.getCategoryId() == null
+                    ? "未分类"
+                    : categoryNames.getOrDefault(c.getCategoryId(), "未分类");
             byCategory.merge(key, 1L, Long::sum);
         }
         data.put("courseByCategory", byCategory);
@@ -100,9 +108,15 @@ public class StatsService {
         data.put("courseTitles", titles);
         data.put("enrollCounts", enrolls);
         data.put("finishRates", finishRates);
-        data.put("scoreBuckets", Map.of(
-                "0-59", buckets[0], "60-69", buckets[1],
-                "70-79", buckets[2], "80-89", buckets[3], "90-100", buckets[4]));
+        // 用 LinkedHashMap 固定分桶顺序：Map.of 的迭代顺序是随机的，
+        // 前端饼图按顺序取默认色盘，顺序一变颜色就跟着乱跳
+        Map<String, Long> bucketMap = new LinkedHashMap<>();
+        bucketMap.put("90-100", (long) buckets[4]);
+        bucketMap.put("80-89", (long) buckets[3]);
+        bucketMap.put("70-79", (long) buckets[2]);
+        bucketMap.put("60-69", (long) buckets[1]);
+        bucketMap.put("0-59", (long) buckets[0]);
+        data.put("scoreBuckets", bucketMap);
         data.put("courseCount", courses.size());
         data.put("studentCount", enrolls.stream().mapToLong(Long::longValue).sum());
         return data;

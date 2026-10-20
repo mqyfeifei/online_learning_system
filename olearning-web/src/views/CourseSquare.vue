@@ -27,7 +27,7 @@
     <el-row :gutter="16">
       <el-col v-for="c in list" :key="c.id" :span="8" style="margin-bottom: 16px">
         <div class="page-card card" @click="router.push(`/courses/${c.id}`)">
-          <div class="cover">{{ c.title.slice(0, 8) }}</div>
+          <div class="cover">{{ c.title }}</div>
           <div class="title">{{ c.title }}</div>
           <div class="muted">{{ c.categoryName }} · {{ c.teacherName }}</div>
           <div class="desc">{{ c.description }}</div>

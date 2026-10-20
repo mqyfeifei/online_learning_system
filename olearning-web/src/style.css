@@ -45,4 +45,10 @@ a {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 1px;
+  /* 没有上传封面时用渐变块兜底展示课程名：留内边距 + 最多两行，
+     避免长标题被字符数截断成「Java 程」这种半截字 */
+  padding: 0 16px;
+  text-align: center;
+  line-height: 1.5;
+  overflow: hidden;
 }

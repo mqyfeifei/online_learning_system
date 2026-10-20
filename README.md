@@ -34,14 +34,16 @@ online_learning_system/
 │       └── utils/             密码加盐工具
 ├── olearning-web/             前端（Vue 3）
 │   └── src/
-│       ├── views/portal       首页、课程广场、详情、学习、测验、成绩、讨论
-│       ├── views/teacher      学情看板、课程、章节、题库、试卷、作业、学生
-│       ├── views/admin        统计、用户、审核、分类、公告
+│       ├── views/             前台页面（首页、课程广场、详情、学习、测验、成绩、讨论、个人中心）
+│       ├── views/teacher      教师端：学情看板、课程、章节、题库、试卷、作业、学生
+│       ├── views/admin        管理端：统计、用户、审核、分类、公告
 │       ├── layouts/           前台布局、后台管理布局
 │       ├── router/            路由 + 角色守卫
 │       ├── stores/            Pinia 登录态
 │       └── utils/             Axios 封装
 ├── sql/init.sql               建库 + 16 张表 + 演示数据
+├── scripts/smoke-test.sh      接口冒烟测试（27 项断言）
+├── docs/screenshots/          联调验收截图
 ├── docker-compose.yml         容器化一键部署
 └── README.md
 ```
@@ -79,6 +81,27 @@ npm run dev
 ```
 
 访问 http://localhost:5173
+
+## 联调验收结果
+
+在以下环境实测跑通（2026-10-20）：
+
+| 项目 | 版本 / 结果 |
+|---|---|
+| JDK | 17.0.12 |
+| Maven | 3.9.11 |
+| Node | 22.20.0 |
+| MySQL | 9.2.0（`utf8mb4_0900_ai_ci`） |
+| Spring Boot | 3.5.16 |
+| 后端单元测试 | `mvn test` → 17 个用例全部通过 |
+| 接口冒烟测试 | `bash scripts/smoke-test.sh` → 27 项断言全部通过 |
+| 前端生产构建 | `npm run build` → 通过（仅提示 chunk > 500KB，未拆包） |
+
+冒烟脚本覆盖：三角色登录、错误密码、未登录 401、越权 403、重复选课拦截、选课 / 打卡 /
+答题 / 交卷判分、教师端 4 个接口、管理端 3 个接口，以及「学生答题响应不得出现 answer 字段」的防作弊校验。
+
+页面截图见 `docs/screenshots/`：首页、学习页、在线测验、教师学情看板、教师课程管理、
+管理端统计、用户管理。
 
 ## 容器化部署（可选）
 

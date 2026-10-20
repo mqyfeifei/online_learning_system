@@ -46,7 +46,8 @@ onMounted(async () => {
     series: [{
       type: 'pie',
       radius: '60%',
-      data: Object.keys(map).map((k) => ({ name: '分类 ' + k, value: map[k] })),
+      // key 已经是分类名（后端 join 过 course_category），不用再加「分类」前缀
+      data: Object.keys(map).map((k) => ({ name: k, value: map[k] })),
       label: { formatter: '{b}: {c} 门' }
     }]
   })

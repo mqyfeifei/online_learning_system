@@ -50,7 +50,8 @@ onMounted(async () => {
       data: stats.value.courseTitles || [],
       axisLabel: { interval: 0, rotate: 20 }
     },
-    yAxis: { type: 'value' },
+    // minInterval: 1 —— 人数是整数，不加的话 ECharts 会画出 0.5 / 1.5 这种刻度
+    yAxis: { type: 'value', minInterval: 1 },
     series: [{
       type: 'bar',
       data: stats.value.enrollCounts || [],
@@ -60,6 +61,14 @@ onMounted(async () => {
   })
 
   const buckets = stats.value.scoreBuckets || {}
+  // 分数段固定配色：高分段绿、低分段红，避免按数组下标取默认色盘导致每次刷新颜色都变
+  const bucketColors: Record<string, string> = {
+    '90-100': '#67c23a',
+    '80-89': '#95d475',
+    '70-79': '#e6a23c',
+    '60-69': '#f3d19e',
+    '0-59': '#f56c6c'
+  }
   const pie = echarts.init(pieRef.value!)
   pie.setOption({
     tooltip: { trigger: 'item' },
@@ -67,7 +76,11 @@ onMounted(async () => {
     series: [{
       type: 'pie',
       radius: ['40%', '65%'],
-      data: Object.keys(buckets).map((k) => ({ name: k + ' 分', value: buckets[k] })),
+      data: Object.keys(buckets).map((k) => ({
+        name: k + ' 分',
+        value: buckets[k],
+        itemStyle: { color: bucketColors[k] }
+      })),
       label: { formatter: '{b}: {c} 人' }
     }]
   })
