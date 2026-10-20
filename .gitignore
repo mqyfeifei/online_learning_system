@@ -24,3 +24,8 @@ src/main/resources/application-local.yml
 # ---------- 系统 ----------
 .DS_Store
 Thumbs.db
+
+# TypeScript 构建产物
+*.tsbuildinfo
+olearning-web/vite.config.js
+olearning-web/vite.config.d.ts
