@@ -1,0 +1,48 @@
+# 一键启动：docker compose up -d
+# 首次启动会自动执行 sql/init.sql 建表并灌入演示数据
+services:
+  mysql:
+    image: mysql:9.2
+    container_name: ols-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      TZ: Asia/Shanghai
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build: ./olearning-server
+    container_name: ols-server
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_PASSWORD: root123456
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/online_learning?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./upload:/app/upload
+
+  web:
+    build: ./olearning-web
+    container_name: ols-web
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "8081:80"
+
+volumes:
+  mysql-data:

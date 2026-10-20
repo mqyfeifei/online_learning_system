@@ -1,0 +1,26 @@
+# ---------- 后端 ----------
+target/
+*.iml
+
+# ---------- 前端 ----------
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.suo
+
+# ---------- 业务 / 敏感 ----------
+upload/
+logs/
+*.log
+# 本地数据库密码配置不入库（模板见 application-example.yml）
+src/main/resources/application-local.yml
+
+# ---------- 系统 ----------
+.DS_Store
+Thumbs.db
