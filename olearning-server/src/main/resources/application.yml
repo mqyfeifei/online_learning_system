@@ -12,8 +12,8 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/online_learning?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
     username: root
-    # 改成你自己 MySQL 的密码；也可以用环境变量 DB_PASSWORD 覆盖
-    password: CHANGE_ME
+    # 本地默认密码写在冒号后面；换机器 / 上云用环境变量 DB_PASSWORD 覆盖，不必改代码
+    password: ${DB_PASSWORD:CHANGE_ME}
   servlet:
     multipart:
       max-file-size: 100MB

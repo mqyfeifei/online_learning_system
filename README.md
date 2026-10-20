@@ -59,8 +59,14 @@ mysql -u root -p < sql/init.sql
 
 ### 2. 配置后端
 
-修改 `olearning-server/src/main/resources/application.yml` 里的 `password` 为你的 MySQL 密码，
-或设置环境变量 `DB_PASSWORD`。
+`application.yml` 里的数据源密码写成 `password: ${DB_PASSWORD:CHANGE_ME}`——冒号后面是本地兜底值，
+换机器时不用改代码，设置环境变量即可：
+
+```bash
+export DB_PASSWORD=你的MySQL密码      # Windows CMD: set DB_PASSWORD=你的密码
+```
+
+**提交代码前记得把兜底值改成占位符**，别把真实密码推到公开仓库。
 
 ### 3. 启动后端
 

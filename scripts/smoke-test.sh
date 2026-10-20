@@ -4,6 +4,8 @@
 # 用法： bash scripts/smoke-test.sh [BASE_URL]
 #       默认 BASE_URL = http://localhost:8080
 # 前提：后端已启动、数据库已执行 sql/init.sql
+# 说明：脚本可重复执行。选课前会先退课，所以连跑多次结果一致
+#       （不做这一步的话，第二次跑会在「选新课成功」上报 400 已选）
 # ============================================================
 
 BASE="${1:-http://localhost:8080}"
@@ -98,6 +100,9 @@ expect_code "我的课程可访问" "$MY" 200
 
 ENROLL_AGAIN=$(req -X POST "$BASE/api/courses/1/enroll" -H "Authorization: Bearer $STUDENT_TOKEN")
 expect_code "TC-04 重复选课被拒绝" "$ENROLL_AGAIN" 400
+
+# 先退课，保证脚本可重复执行（首次跑时本来就没选，退课返回 400，忽略即可）
+req -X DELETE "$BASE/api/courses/2/enroll" -H "Authorization: Bearer $STUDENT_TOKEN" > /dev/null
 
 ENROLL2=$(req -X POST "$BASE/api/courses/2/enroll" -H "Authorization: Bearer $STUDENT_TOKEN")
 expect_code "选新课成功" "$ENROLL2" 200
