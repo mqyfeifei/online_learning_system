@@ -59,14 +59,27 @@ mysql -u root -p < sql/init.sql
 
 ### 2. 配置后端
 
-`application.yml` 里的数据源密码写成 `password: ${DB_PASSWORD:CHANGE_ME}`——冒号后面是本地兜底值，
-换机器时不用改代码，设置环境变量即可：
+仓库里的 `application.yml` **不含真实密码**，密码有两个来源，按优先级：
 
-```bash
-export DB_PASSWORD=你的MySQL密码      # Windows CMD: set DB_PASSWORD=你的密码
+| 方式 | 做法 | 适用 |
+|---|---|---|
+| 本地配置文件（默认） | 新建 `olearning-server/config/application-local.yml`，填 `spring.datasource.password` | 自己机器上开发，已加入 `.gitignore` |
+| 环境变量 | `export DB_PASSWORD=你的密码` | 容器 / 服务器 |
+
+`config/application-local.yml` 模板：
+
+```yaml
+spring:
+  datasource:
+    username: root
+    password: 你的MySQL密码
 ```
 
-**提交代码前记得把兜底值改成占位符**，别把真实密码推到公开仓库。
+注意两点：
+
+- 必须放在 `olearning-server/config/` 下（Spring Boot 的 `./config/` 自动搜索路径），
+  **不要**放进 `src/main/resources` —— 那样会被打进 jar，容器里的 `DB_PASSWORD` 会被它覆盖。
+- 启动时的工作目录要是 `olearning-server`，否则找不到 `./config/`，此时退回读 `DB_PASSWORD`。
 
 ### 3. 启动后端
 
@@ -74,6 +87,8 @@ export DB_PASSWORD=你的MySQL密码      # Windows CMD: set DB_PASSWORD=你的�
 cd olearning-server
 mvn.cmd spring-boot:run        # Git Bash 下必须用 mvn.cmd
 ```
+
+启动日志里应看到 `falling back to 1 default profile: "local"`，说明本地配置已加载。
 
 - 服务地址：http://localhost:8080
 - 接口文档：http://localhost:8080/swagger-ui.html

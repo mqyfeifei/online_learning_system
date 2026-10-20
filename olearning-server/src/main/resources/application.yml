@@ -8,12 +8,16 @@ server:
 spring:
   application:
     name: olearning-server
+  # 默认激活 local 剖面：读 application-local.yml（本地密码，不入库）
+  # 没有该文件时退回环境变量 DB_PASSWORD，仓库里始终不出现真实密码
+  profiles:
+    default: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/online_learning?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
     username: root
-    # 本地默认密码写在冒号后面；换机器 / 上云用环境变量 DB_PASSWORD 覆盖，不必改代码
-    password: ${DB_PASSWORD:CHANGE_ME}
+    # 真实密码放 application-local.yml 或环境变量 DB_PASSWORD，此处只留空值占位
+    password: ${DB_PASSWORD:}
   servlet:
     multipart:
       max-file-size: 100MB

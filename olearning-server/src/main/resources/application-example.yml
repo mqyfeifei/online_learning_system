@@ -1,18 +1,35 @@
-# 复制本文件为 application.yml（或直接改 application.yml）后填写自己的数据库密码
-# 注意：真实密码不要提交到 GitHub
-# 推荐写法：password: ${DB_PASSWORD:本地默认密码}，密码从环境变量走，代码里只留兜底值
+# ============================================================
+# 配置模板
+# 真实密码不要写进 application.yml / 本文件，两个正确位置：
+#   1) olearning-server/config/application-local.yml（推荐，已 gitignore，不进 jar）
+#   2) 环境变量 DB_PASSWORD（容器 / 服务器）
+# 需要在别处重建配置时，可参照本文件字段自行填写。
+# ============================================================
 server:
   port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
 
 spring:
+  application:
+    name: olearning-server
+  profiles:
+    default: local          # 默认加载 config/application-local.yml
   datasource:
-    url: jdbc:mysql://localhost:3306/online_learning?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
-    username: root
-    password: ${DB_PASSWORD:你的MySQL密码}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/online_learning?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false&rewriteBatchedStatements=true
+    username: root
+    password: ${DB_PASSWORD:}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
 app:
   jwt:
+    # HS256 要求密钥长度 >= 32 字节
     secret: online-learning-platform-2026-mqy-secret-key
     expire: 7200000
   upload:

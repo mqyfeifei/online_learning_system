@@ -19,6 +19,8 @@ upload/
 logs/
 *.log
 # 本地数据库密码配置不入库（模板见 application-example.yml）
+# 放在 olearning-server/config/ 下，由 Spring Boot 的 ./config/ 自动加载，不进 jar
+olearning-server/config/application-local.yml
 src/main/resources/application-local.yml
 
 # ---------- 系统 ----------
