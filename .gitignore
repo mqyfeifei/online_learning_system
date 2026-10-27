@@ -6,6 +6,7 @@ target/
 node_modules/
 dist/
 dist-ssr/
+dist-check/
 .vite/
 *.local
 
@@ -26,6 +27,8 @@ src/main/resources/application-local.yml
 # ---------- 系统 ----------
 .DS_Store
 Thumbs.db
+# git filter-branch 留下的临时目录
+.git-rewrite/
 
 # TypeScript 构建产物
 *.tsbuildinfo

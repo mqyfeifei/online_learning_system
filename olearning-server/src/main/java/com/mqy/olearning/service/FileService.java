@@ -27,8 +27,7 @@ public class FileService {
     @Value("${app.upload.url-prefix}")
     private String urlPrefix;
 
-    public Map<String, Object> upload(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
+    public Map<String, Object> upload(MultipartFile file) {        if (file == null || file.isEmpty()) {
             throw new BusinessException("上传文件不能为空");
         }
         String original = StringUtils.cleanPath(
@@ -61,5 +60,44 @@ public class FileService {
                 "size", file.getSize(),
                 "type", ext.replace(".", "")
         );
+    }
+
+    /**
+     * 把数据库里存的访问地址（/files/2026/10/xxx.pdf）还原成本地文件。
+     * 外链（http 开头）不支持解析——课件统一走站内上传，外链只做展示。
+     */
+    public File resolve(String url) {
+        if (!StringUtils.hasText(url)) {
+            throw new BusinessException("文件地址为空");
+        }
+        String relative = url.trim();
+        if (relative.startsWith("http://") || relative.startsWith("https://")) {
+            if (relative.contains(urlPrefix)) {
+                relative = relative.substring(relative.indexOf(urlPrefix) + urlPrefix.length());
+            } else {
+                throw new BusinessException("外部链接文件不支持在线解析，请打开原始地址查看");
+            }
+        } else if (relative.startsWith(urlPrefix)) {
+            relative = relative.substring(urlPrefix.length());
+        }
+        relative = relative.replace("\\", "/");
+        // 防止 ../ 目录穿越
+        if (relative.contains("..")) {
+            throw new BusinessException("非法的文件地址");
+        }
+        File file = new File(uploadPath, relative);
+        if (!file.exists() || !file.isFile()) {
+            throw new BusinessException("文件不存在或已被删除");
+        }
+        return file;
+    }
+
+    /** 取扩展名（小写、不带点） */
+    public String extOf(String name) {
+        if (!StringUtils.hasText(name)) {
+            return "";
+        }
+        int dot = name.lastIndexOf('.');
+        return dot < 0 ? "" : name.substring(dot + 1).toLowerCase();
     }
 }

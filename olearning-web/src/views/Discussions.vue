@@ -1,63 +1,177 @@
 <template>
-  <div>
-    <div class="page-card">
-      <el-row justify="space-between" align="middle">
-        <el-input v-model="keyword" placeholder="搜索帖子标题" clearable style="width: 280px"
-                  @keyup.enter="load(1)" />
-        <el-button type="primary" @click="openCreate">发 帖</el-button>
-      </el-row>
-    </div>
-
-    <div class="page-card">
-      <div v-for="item in list" :key="item.post.id" class="post" @click="openDetail(item.post.id)">
-        <div class="post-title">{{ item.post.title }}</div>
-        <div class="muted">
-          {{ item.authorName }} · {{ fmt(item.post.createTime) }} ·
-          {{ item.replyCount }} 条回复 · {{ item.post.likeCount }} 赞
-        </div>
+  <div class="disc fade-up">
+    <!-- 工具栏 -->
+    <section class="toolbar">
+      <div class="tb-search">
+        <el-icon><Search /></el-icon>
+        <input v-model="keyword" placeholder="搜索帖子标题" @keyup.enter="load(1)" />
       </div>
-      <el-empty v-if="list.length === 0" description="还没有帖子" />
-      <el-pagination v-model:current-page="current" :page-size="10" :total="total"
-                     layout="prev, pager, next, total" style="justify-content: center; margin-top: 12px"
-                     @current-change="load()" />
+      <span class="ol-muted">{{ total }} 个话题</span>
+      <el-button type="primary" @click="openPost">
+        <el-icon><EditPen /></el-icon> 发个帖子
+      </el-button>
+    </section>
+
+    <div class="layout">
+      <!-- ==================== 帖子列表 ==================== -->
+      <main v-loading="loading" class="list">
+        <article
+          v-for="item in posts"
+          :key="item.post.id"
+          class="post"
+          @click="openDetail(item.post.id)"
+        >
+          <div class="avatar" :style="{ background: avatarColor(item.post.id) }">
+            {{ (item.authorName || '匿').slice(0, 1) }}
+          </div>
+          <div class="p-body">
+            <h3>{{ item.post.title }}</h3>
+            <p class="excerpt">{{ item.post.content }}</p>
+            <div class="p-meta">
+              <span>{{ item.authorName }}</span>
+              <span class="dot">·</span>
+              <span>{{ fmt(item.post.createTime) }}</span>
+              <span class="stat"><el-icon><ChatDotRound /></el-icon>{{ item.replyCount || 0 }}</span>
+              <span class="stat"><el-icon><Pointer /></el-icon>{{ item.post.likeCount || 0 }}</span>
+            </div>
+          </div>
+          <el-icon class="arrow"><ArrowRight /></el-icon>
+        </article>
+
+        <div v-if="!loading && !posts.length" class="ol-empty ol-card">
+          <span class="icon">💬</span>
+          还没有帖子，第一个来提问吧
+        </div>
+
+        <div v-if="total > size" class="pager">
+          <el-pagination
+            background
+            layout="prev, pager, next"
+            :total="total"
+            :page-size="size"
+            :current-page="current"
+            @current-change="load"
+          />
+        </div>
+      </main>
+
+      <!-- ==================== 侧栏 ==================== -->
+      <aside class="side">
+        <section class="ol-card">
+          <div class="ol-card-title">
+            <h2 class="ol-h2">讨论指引</h2>
+          </div>
+          <ul class="guide">
+            <li><b>先搜后问</b>：搜索关键词，很多问题已经有人问过</li>
+            <li><b>写清上下文</b>：贴上报错信息、已经试过的方法</li>
+            <li><b>一个帖子一个问题</b>：方便后来的人检索</li>
+          </ul>
+        </section>
+
+        <section class="ol-card">
+          <div class="ol-card-title">
+            <h2 class="ol-h2">热门话题</h2>
+          </div>
+          <div class="hot-list">
+            <div
+              v-for="(item, i) in hot"
+              :key="item.post.id"
+              class="hot-row"
+              @click="openDetail(item.post.id)"
+            >
+              <span class="hot-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
+              <b>{{ item.post.title }}</b>
+              <span class="ol-muted">{{ item.replyCount || 0 }}</span>
+            </div>
+            <div v-if="!hot.length" class="ol-empty" style="padding: 16px 0">暂无数据</div>
+          </div>
+        </section>
+      </aside>
     </div>
 
-    <el-dialog v-model="createDialog" title="发布新帖" width="560px">
+    <!-- ==================== 发帖 ==================== -->
+    <el-dialog append-to-body v-model="postDialog" title="发个帖子" width="560px">
       <el-form label-position="top">
+        <el-form-item label="所属课程">
+          <el-select v-model="form.courseId" placeholder="选择课程" style="width: 100%">
+            <el-option v-for="c in courses" :key="c.id" :label="c.title" :value="c.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="标题">
-          <el-input v-model="form.title" />
+          <el-input v-model="form.title" maxlength="60" show-word-limit placeholder="一句话说清问题" />
         </el-form-item>
         <el-form-item label="内容">
-          <el-input v-model="form.content" type="textarea" :rows="5" />
-        </el-form-item>
-        <el-form-item label="所属课程 ID（可选）">
-          <el-input v-model="form.courseId" placeholder="填课程ID，不填则为公共讨论" />
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            :rows="6"
+            maxlength="1000"
+            show-word-limit
+            placeholder="描述你的问题：背景、现象、已经试过什么"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createDialog = false">取消</el-button>
-        <el-button type="primary" @click="create">发布</el-button>
+        <el-button @click="postDialog = false">取消</el-button>
+        <el-button type="primary" :loading="posting" @click="submitPost">发布</el-button>
       </template>
     </el-dialog>
 
-    <el-drawer v-model="detailDrawer" title="帖子详情" size="560px">
-      <div v-if="detail">
-        <h3 style="margin-top: 0">{{ detail.post.title }}</h3>
-        <div class="muted" style="margin-bottom: 12px">
-          {{ detail.authorName }} · {{ fmt(detail.post.createTime) }}
+    <!-- ==================== 帖子详情 ==================== -->
+    <el-drawer v-model="detailDrawer" append-to-body size="620px" :with-header="false">
+      <div v-if="detail" class="detail">
+        <div class="d-head">
+          <div class="avatar" :style="{ background: avatarColor(detail.post.id) }">
+            {{ (detail.authorName || '匿').slice(0, 1) }}
+          </div>
+          <div class="d-meta">
+            <b>{{ detail.authorName }}</b>
+            <span>{{ fmt(detail.post.createTime) }}</span>
+          </div>
+          <el-button
+            v-if="canDelete(detail.post)"
+            text
+            type="danger"
+            size="small"
+            @click="removePost(detail.post.id)"
+          >
+            删除
+          </el-button>
         </div>
-        <p class="content">{{ detail.post.content }}</p>
-        <el-button size="small" @click="like">点赞（{{ detail.post.likeCount }}）</el-button>
 
-        <el-divider>回复（{{ detail.replies.length }}）</el-divider>
-        <div v-for="r in detail.replies" :key="r.reply.id" class="reply">
-          <div class="reply-author">{{ r.authorName }}</div>
-          <div>{{ r.reply.content }}</div>
+        <h2 class="d-title">{{ detail.post.title }}</h2>
+        <p class="d-content">{{ detail.post.content }}</p>
+
+        <div class="d-actions">
+          <button class="like" @click="like(detail.post)">
+            <el-icon><Pointer /></el-icon> 有帮助 {{ detail.post.likeCount || 0 }}
+          </button>
         </div>
 
-        <div style="margin-top: 16px">
-          <el-input v-model="replyContent" type="textarea" :rows="3" placeholder="写下你的回复" />
-          <el-button type="primary" style="margin-top: 8px" @click="doReply">回复</el-button>
+        <div class="replies">
+          <h3>全部回复 <i>{{ detail.replies?.length || 0 }}</i></h3>
+          <div v-for="r in detail.replies" :key="r.reply.id" class="reply">
+            <div class="r-avatar" :style="{ background: avatarColor(r.reply.id + 3) }">
+              {{ (r.authorName || '匿').slice(0, 1) }}
+            </div>
+            <div class="r-body">
+              <div class="r-top">
+                <b>{{ r.authorName }}</b>
+                <span>{{ fmt(r.reply.createTime) }}</span>
+              </div>
+              <p>{{ r.reply.content }}</p>
+            </div>
+          </div>
+          <div v-if="!detail.replies?.length" class="ol-empty" style="padding: 20px 0">
+            还没有人回复，来说点什么
+          </div>
+        </div>
+
+        <div class="reply-box">
+          <textarea v-model="replyText" rows="3" placeholder="写下你的回复…" class="reply-input" />
+          <el-button type="primary" :disabled="!replyText.trim()" @click="sendReply">
+            回复
+          </el-button>
         </div>
       </div>
     </el-drawer>
@@ -65,123 +179,484 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import request from '@/utils/request'
+import { avatarColor } from '@/utils/cover'
 
+const router = useRouter()
 const userStore = useUserStore()
-const list = ref<any[]>([])
+
+const posts = ref<any[]>([])
+const hot = ref<any[]>([])
+const courses = ref<any[]>([])
 const total = ref(0)
 const current = ref(1)
+const size = 8
 const keyword = ref('')
+const loading = ref(false)
 
-const createDialog = ref(false)
-const form = reactive<any>({ title: '', content: '', courseId: '' })
+const postDialog = ref(false)
+const posting = ref(false)
+const form = ref<any>({ courseId: null, title: '', content: '' })
 
 const detailDrawer = ref(false)
 const detail = ref<any>(null)
-const replyContent = ref('')
+const replyText = ref('')
 
 function fmt(t: string) {
   return t ? t.replace('T', ' ').slice(0, 16) : ''
 }
 
-async function load(page?: number) {
-  if (page) current.value = page
+async function load(page = 1) {
+  loading.value = true
+  current.value = page
+  try {
+    const data: any = await request.get('/api/public/discussions', {
+      params: { keyword: keyword.value || undefined, current: page, size }
+    })
+    posts.value = data.records || []
+    total.value = data.total || 0
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadHot() {
   const data: any = await request.get('/api/public/discussions', {
-    params: { keyword: keyword.value, current: current.value, size: 10 }
+    params: { current: 1, size: 30 }
   })
-  list.value = data.records
-  total.value = data.total
+  const list = (data.records || []) as any[]
+  hot.value = [...list].sort((a, b) => (b.replyCount || 0) - (a.replyCount || 0)).slice(0, 5)
 }
 
-function openCreate() {
-  if (!userStore.isLogin) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  createDialog.value = true
+function needLogin() {
+  ElMessage.warning('请先登录')
+  router.push({ path: '/login', query: { redirect: '/discussions' } })
 }
 
-async function create() {
-  if (!form.title) {
-    ElMessage.warning('标题不能为空')
+function openPost() {
+  if (!userStore.isLogin) return needLogin()
+  form.value = { courseId: courses.value[0]?.id || null, title: '', content: '' }
+  postDialog.value = true
+}
+
+async function submitPost() {
+  if (!form.value.courseId) {
+    ElMessage.warning('请选择所属课程')
     return
   }
-  await request.post('/api/discussions', {
-    title: form.title,
-    content: form.content,
-    courseId: form.courseId ? Number(form.courseId) : null
-  })
-  ElMessage.success('发布成功')
-  createDialog.value = false
-  form.title = ''
-  form.content = ''
-  load(1)
+  if (!form.value.title.trim()) {
+    ElMessage.warning('请填写标题')
+    return
+  }
+  if (!form.value.content.trim()) {
+    ElMessage.warning('请填写内容')
+    return
+  }
+  posting.value = true
+  try {
+    await request.post('/api/discussions', form.value)
+    ElMessage.success('已发布')
+    postDialog.value = false
+    load(1)
+    loadHot()
+  } finally {
+    posting.value = false
+  }
 }
 
 async function openDetail(id: number) {
-  detail.value = await request.get('/api/public/discussions/' + id)
+  detail.value = await request.get(`/api/public/discussions/${id}`)
   detailDrawer.value = true
+  replyText.value = ''
 }
 
-async function like() {
-  if (!userStore.isLogin) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  await request.post('/api/discussions/' + detail.value.post.id + '/like')
-  detail.value.post.likeCount += 1
-  load()
+function canDelete(post: any) {
+  if (!userStore.isLogin) return false
+  return userStore.role === 'ADMIN' || post.userId === userStore.userInfo?.id
 }
 
-async function doReply() {
-  if (!userStore.isLogin) {
-    ElMessage.warning('请先登录')
-    return
-  }
-  if (!replyContent.value) {
-    ElMessage.warning('回复内容不能为空')
-    return
-  }
-  await request.post('/api/discussions/' + detail.value.post.id + '/reply', {
-    content: replyContent.value
-  })
+async function removePost(id: number) {
+  await ElMessageBox.confirm('确认删除这条帖子？', '提示', { type: 'warning' })
+  await request.delete(`/api/discussions/${id}`)
+  ElMessage.success('已删除')
+  detailDrawer.value = false
+  load(current.value)
+}
+
+async function like(post: any) {
+  if (!userStore.isLogin) return needLogin()
+  await request.post(`/api/discussions/${post.id}/like`)
+  post.likeCount = (post.likeCount || 0) + 1
+}
+
+async function sendReply() {
+  if (!userStore.isLogin) return needLogin()
+  const content = replyText.value.trim()
+  if (!content) return
+  await request.post(`/api/discussions/${detail.value.post.id}/reply`, { content })
   ElMessage.success('回复成功')
-  replyContent.value = ''
-  openDetail(detail.value.post.id)
-  load()
+  replyText.value = ''
+  detail.value = await request.get(`/api/public/discussions/${detail.value.post.id}`)
+  load(current.value)
+  loadHot()
 }
 
-onMounted(() => load())
+onMounted(async () => {
+  load(1)
+  loadHot()
+  const page: any = await request.get('/api/public/courses', { params: { size: 100 } })
+  courses.value = page.records || []
+})
 </script>
 
 <style scoped>
+.disc {
+  max-width: 1200px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.tb-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 44px;
+  padding: 0 16px;
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-pill);
+  transition: all 0.2s;
+}
+.tb-search:focus-within {
+  border-color: var(--brand-300);
+  box-shadow: 0 0 0 3px var(--brand-50);
+}
+.tb-search .el-icon {
+  color: var(--ink-300);
+}
+.tb-search input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 13.5px;
+  font-family: var(--font);
+  min-width: 0;
+}
+.tb-search input::placeholder {
+  color: var(--ink-300);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 18px;
+  align-items: start;
+}
+
+/* ---------- 列表 ---------- */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 200px;
+}
 .post {
-  padding: 14px 8px;
-  border-bottom: 1px solid #f2f6fc;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
   cursor: pointer;
+  transition: all 0.2s;
 }
 .post:hover {
-  background: #f5f7fa;
+  border-color: var(--brand-200);
+  box-shadow: var(--sh-sm);
+  transform: translateY(-1px);
 }
-.post-title {
-  font-weight: 600;
-  margin-bottom: 6px;
+.avatar {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
 }
-.content {
-  line-height: 1.8;
-  color: #606266;
+.p-body {
+  flex: 1;
+  min-width: 0;
+}
+.p-body h3 {
+  margin: 0 0 5px;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.45;
+}
+.excerpt {
+  margin: 0 0 9px;
+  font-size: 12.5px;
+  color: var(--ink-400);
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.p-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--ink-400);
+}
+.dot {
+  color: var(--ink-200);
+}
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+}
+.arrow {
+  color: var(--ink-300);
+  font-size: 13px;
+  align-self: center;
+  flex: none;
+}
+
+.pager {
+  display: flex;
+  justify-content: center;
+  padding: 18px 0 4px;
+}
+
+/* ---------- 侧栏 ---------- */
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.guide {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.guide li {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-500);
+}
+.guide b {
+  color: var(--ink-900);
+  font-weight: 650;
+}
+.hot-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hot-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 4px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+.hot-row:hover {
+  background: var(--surface-sunken);
+}
+.hot-no {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--surface-sunken);
+  color: var(--ink-400);
+}
+.hot-no.top {
+  background: var(--brand);
+  color: #fff;
+}
+.hot-row b {
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 详情抽屉 ---------- */
+.detail {
+  padding: 4px 6px 20px;
+}
+.d-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 16px;
+}
+.d-meta {
+  flex: 1;
+}
+.d-meta b {
+  font-size: 13.5px;
+  font-weight: 650;
+  display: block;
+}
+.d-meta span {
+  font-size: 11.5px;
+  color: var(--ink-400);
+}
+.d-title {
+  font-size: 20px;
+  font-weight: 730;
+  letter-spacing: -0.4px;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+.d-content {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--ink-700);
   white-space: pre-wrap;
 }
-.reply {
-  padding: 8px 0;
-  border-bottom: 1px dashed #ebeef5;
+.d-actions {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--ink-100);
 }
-.reply-author {
-  font-size: 12px;
-  color: #409eff;
-  margin-bottom: 4px;
+.like {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink-500);
+  font-size: 12.5px;
+  font-weight: 550;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.like:hover {
+  border-color: var(--brand-300);
+  color: var(--brand);
+}
+
+.replies {
+  padding-top: 16px;
+}
+.replies h3 {
+  font-size: 13.5px;
+  font-weight: 680;
+  margin: 0 0 14px;
+}
+.replies h3 i {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-400);
+  margin-left: 4px;
+}
+.reply {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.r-avatar {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+.r-body {
+  flex: 1;
+  background: var(--surface-sunken);
+  border-radius: var(--r-md);
+  padding: 10px 13px;
+}
+.r-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+.r-top b {
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.r-top span {
+  font-size: 11px;
+  color: var(--ink-300);
+}
+.r-body p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--ink-700);
+  white-space: pre-wrap;
+}
+
+.reply-box {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ink-100);
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+.reply-input {
+  flex: 1;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  font-family: var(--font);
+  font-size: 12.5px;
+  line-height: 1.7;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.18s;
+}
+.reply-input:focus {
+  border-color: var(--brand-300);
+  box-shadow: 0 0 0 3px var(--brand-50);
+}
+
+@media (max-width: 1080px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

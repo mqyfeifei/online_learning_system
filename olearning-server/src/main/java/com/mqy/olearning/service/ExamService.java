@@ -18,18 +18,33 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 /**
- * 测验：题库、组卷、答题、自动判分
+ * 测验：题库、组卷、答题、判分与主观题批阅。
+ * <p>判分规则：
+ * <ul>
+ *   <li>单选 / 多选 / 判断：客观题，交卷即自动判分</li>
+ *   <li>填空题：按空比对，忽略大小写与首尾空白，同一空多种写法用 ~ 分隔</li>
+ *   <li>问答题：不自动判分，交卷后进入「待批阅」，教师按点给分并可写评语</li>
+ * </ul>
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ExamService {
 
+    /** 题型常量 */
+    public static final int TYPE_SINGLE = 1;
+    public static final int TYPE_MULTI = 2;
+    public static final int TYPE_JUDGE = 3;
+    public static final int TYPE_BLANK = 4;
+    public static final int TYPE_ESSAY = 5;
+
     private final QuestionMapper questionMapper;
     private final ExamPaperMapper paperMapper;
     private final PaperQuestionMapper paperQuestionMapper;
     private final ExamRecordMapper recordMapper;
+    private final ExamMarkMapper markMapper;
     private final CourseMapper courseMapper;
+    private final SysUserMapper userMapper;
     private final EnrollmentService enrollmentService;
     private final ObjectMapper objectMapper;
 
@@ -46,6 +61,26 @@ public class ExamService {
         if (question.getDifficulty() == null) {
             question.setDifficulty(1);
         }
+        Integer type = question.getType() == null ? TYPE_SINGLE : question.getType();
+        question.setType(type);
+        if (type == TYPE_ESSAY) {
+            // 问答题不设标准答案，参考答案可为空
+            question.setAnswer(null);
+            question.setOptionsJson(null);
+        } else if (type == TYPE_BLANK) {
+            if (question.getAnswer() == null || question.getAnswer().isBlank()) {
+                throw new BusinessException("填空题需要填写标准答案，多个空用 | 分隔");
+            }
+            question.setOptionsJson(null);
+        } else if (type == TYPE_JUDGE) {
+            question.setOptionsJson(null);
+            if (question.getAnswer() == null || question.getAnswer().isBlank()) {
+                throw new BusinessException("请选择判断题的正确答案");
+            }
+        } else if (question.getAnswer() == null || question.getAnswer().isBlank()) {
+            throw new BusinessException("请设置正确答案");
+        }
+
         if (question.getId() == null) {
             questionMapper.insert(question);
         } else {
@@ -125,7 +160,7 @@ public class ExamService {
         paperQuestionMapper.deleteById(id);
     }
 
-    /** 教师视角看试卷题目（带答案） */
+    /** 教师 / 学生视角看试卷题目；withAnswer=false 时不返回答案 */
     public List<QuestionVO> paperQuestions(Long paperId, boolean withAnswer) {
         List<PaperQuestion> pqs = paperQuestionMapper.selectList(new LambdaQueryWrapper<PaperQuestion>()
                 .eq(PaperQuestion::getPaperId, paperId)
@@ -139,12 +174,15 @@ public class ExamService {
             }
             QuestionVO vo = new QuestionVO();
             vo.setId(q.getId());
+            // 关联表主键单独返回：前端移除题目时按它删，用题干 id 会删错关联行
+            vo.setPaperQuestionId(pq.getId());
             vo.setType(q.getType());
             vo.setTitle(q.getTitle());
             vo.setScore(pq.getScore());
             vo.setOptions(parseOptions(q.getOptionsJson()));
             if (withAnswer) {
                 vo.setAnswer(q.getAnswer());
+                vo.setReferenceAnswer(q.getReferenceAnswer());
                 vo.setAnalysis(q.getAnalysis());
             }
             result.add(vo);
@@ -152,7 +190,7 @@ public class ExamService {
         return result;
     }
 
-    /** 学生开始答题：不返回答案和解析 */
+    /** 学生开始答题：不返回答案和解析；只能在开放时间窗内、且每张试卷只能考一次 */
     public Map<String, Object> startExam(Long paperId, Long userId) {
         ExamPaper paper = paperMapper.selectById(paperId);
         if (paper == null || paper.getStatus() == null || paper.getStatus() != 1) {
@@ -161,6 +199,13 @@ public class ExamService {
         if (!enrollmentService.isEnrolled(userId, paper.getCourseId())) {
             throw new BusinessException("请先选修该课程再参加测验");
         }
+        checkWindow(paper);
+
+        ExamRecord done = latestRecord(paperId, userId);
+        if (done != null) {
+            throw new BusinessException("该测验已完成，不能重复作答");
+        }
+
         Map<String, Object> data = new HashMap<>();
         data.put("paper", paper);
         data.put("questions", paperQuestions(paperId, false));
@@ -168,19 +213,48 @@ public class ExamService {
         return data;
     }
 
-    /** 交卷判分：客观题自动判，多选需完全一致 */
+    /** 时间窗校验：未开始 / 已结束都不允许作答 */
+    private void checkWindow(ExamPaper paper) {
+        LocalDateTime now = LocalDateTime.now();
+        if (paper.getStartTime() != null && now.isBefore(paper.getStartTime())) {
+            throw new BusinessException("测验尚未开始，开放时间：" + fmtMinute(paper.getStartTime()));
+        }
+        if (paper.getEndTime() != null && now.isAfter(paper.getEndTime())) {
+            throw new BusinessException("测验已于 " + fmtMinute(paper.getEndTime()) + " 结束");
+        }
+    }
+
+    private String fmtMinute(LocalDateTime time) {
+        return time.toString().replace('T', ' ').substring(0, 16);
+    }
+
+    private ExamRecord latestRecord(Long paperId, Long userId) {
+        List<ExamRecord> records = recordMapper.selectList(new LambdaQueryWrapper<ExamRecord>()
+                .eq(ExamRecord::getPaperId, paperId)
+                .eq(ExamRecord::getUserId, userId)
+                .orderByDesc(ExamRecord::getId));
+        return records.isEmpty() ? null : records.get(0);
+    }
+
+    /** 交卷判分：客观题自动判，多选需完全一致；问答题留给教师批阅 */
     @Transactional
     public ExamResultVO submit(Long userId, ExamSubmitDTO dto) {
         ExamPaper paper = paperMapper.selectById(dto.getPaperId());
         if (paper == null) {
             throw new BusinessException("试卷不存在");
         }
+        checkWindow(paper);
+        ExamRecord submitted = latestRecord(paper.getId(), userId);
+        if (submitted != null) {
+            throw new BusinessException("该测验已提交，不能重复交卷");
+        }
         Map<String, String> answers = dto.getAnswers() == null ? Map.of() : dto.getAnswers();
 
         List<PaperQuestion> pqs = paperQuestionMapper.selectList(new LambdaQueryWrapper<PaperQuestion>()
                 .eq(PaperQuestion::getPaperId, paper.getId()));
 
-        int score = 0;
+        int objectiveScore = 0;
+        boolean hasEssay = false;
         List<ExamResultVO.AnswerDetail> details = new ArrayList<>();
 
         for (PaperQuestion pq : pqs) {
@@ -188,19 +262,34 @@ public class ExamService {
             if (q == null) {
                 continue;
             }
+            int type = q.getType() == null ? TYPE_SINGLE : q.getType();
             String your = answers.getOrDefault(String.valueOf(q.getId()), "");
-            boolean correct = normalize(your).equals(normalize(q.getAnswer()));
-            if (correct) {
-                score += pq.getScore() == null ? 0 : pq.getScore();
-            }
+            int fullScore = pq.getScore() == null ? 0 : pq.getScore();
+
             ExamResultVO.AnswerDetail detail = new ExamResultVO.AnswerDetail();
             detail.setQuestionId(q.getId());
+            detail.setType(type);
             detail.setTitle(q.getTitle());
             detail.setYourAnswer(your);
+            detail.setFullScore(fullScore);
             detail.setRightAnswer(q.getAnswer());
-            detail.setCorrect(correct);
-            detail.setScore(correct ? pq.getScore() : 0);
+            detail.setReferenceAnswer(q.getReferenceAnswer());
             detail.setAnalysis(q.getAnalysis());
+
+            if (type == TYPE_ESSAY) {
+                hasEssay = true;
+                detail.setNeedManual(true);
+                detail.setCorrect(null);
+                detail.setScore(0);
+            } else {
+                boolean correct = isCorrect(q, your);
+                detail.setNeedManual(false);
+                detail.setCorrect(correct);
+                detail.setScore(correct ? fullScore : 0);
+                if (correct) {
+                    objectiveScore += fullScore;
+                }
+            }
             details.add(detail);
         }
 
@@ -208,15 +297,22 @@ public class ExamService {
         record.setPaperId(paper.getId());
         record.setUserId(userId);
         record.setAnswersJson(writeJson(answers));
-        record.setScore(score);
-        record.setPassed(score >= (paper.getPassScore() == null ? 60 : paper.getPassScore()) ? 1 : 0);
+        record.setObjectiveScore(objectiveScore);
+        record.setSubjectiveScore(0);
+        record.setScore(objectiveScore);
+        // 有问答题 → 待批阅；否则无需批阅
+        record.setMarkStatus(hasEssay ? 1 : 0);
+        record.setPassed(passFlag(objectiveScore, paper));
         record.setStartTime(LocalDateTime.now());
         record.setSubmitTime(LocalDateTime.now());
         recordMapper.insert(record);
 
         ExamResultVO vo = new ExamResultVO();
         vo.setRecordId(record.getId());
-        vo.setScore(score);
+        vo.setScore(objectiveScore);
+        vo.setObjectiveScore(objectiveScore);
+        vo.setSubjectiveScore(0);
+        vo.setMarkStatus(record.getMarkStatus());
         vo.setTotalScore(paper.getTotalScore());
         vo.setPassScore(paper.getPassScore());
         vo.setPassed(record.getPassed() == 1);
@@ -234,6 +330,9 @@ public class ExamService {
             Map<String, Object> item = new HashMap<>();
             item.put("record", r);
             item.put("paperTitle", paper == null ? "已删除试卷" : paper.getTitle());
+            item.put("courseId", paper == null ? null : paper.getCourseId());
+            item.put("paperStartTime", paper == null ? null : paper.getStartTime());
+            item.put("paperEndTime", paper == null ? null : paper.getEndTime());
             item.put("totalScore", paper == null ? 100 : paper.getTotalScore());
             result.add(item);
         }
@@ -249,38 +348,123 @@ public class ExamService {
         if (!record.getUserId().equals(userId)) {
             throw new BusinessException(403, "只能查看自己的答卷");
         }
+        return buildResult(record);
+    }
+
+    // ---------------- 教师批阅 ----------------
+
+    /** 教师端：某份试卷的答卷列表 */
+    public List<Map<String, Object>> paperRecords(Long paperId, Long teacherId) {
+        ExamPaper paper = paperMapper.selectById(paperId);
+        if (paper == null) {
+            throw new BusinessException("试卷不存在");
+        }
+        checkOwner(paper.getCourseId(), teacherId);
+        List<ExamRecord> records = recordMapper.selectList(new LambdaQueryWrapper<ExamRecord>()
+                .eq(ExamRecord::getPaperId, paperId)
+                .orderByDesc(ExamRecord::getId));
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (ExamRecord r : records) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("record", r);
+            item.put("paperTitle", paper.getTitle());
+            item.put("totalScore", paper.getTotalScore());
+            item.put("userId", r.getUserId());
+            SysUser user = userMapper.selectById(r.getUserId());
+            item.put("studentName", user == null ? "未知学生"
+                    : (user.getRealName() == null || user.getRealName().isBlank()
+                    ? user.getUsername() : user.getRealName()));
+            result.add(item);
+        }
+        return result;
+    }
+
+    /** 教师端：答卷详情（含参考答案与批阅记录） */
+    public ExamResultVO teacherRecordDetail(Long recordId, Long teacherId) {
+        ExamRecord record = recordMapper.selectById(recordId);
+        if (record == null) {
+            throw new BusinessException("记录不存在");
+        }
         ExamPaper paper = paperMapper.selectById(record.getPaperId());
-        Map<String, String> answers = readJson(record.getAnswersJson());
+        if (paper == null) {
+            throw new BusinessException("试卷不存在");
+        }
+        checkOwner(paper.getCourseId(), teacherId);
+        return buildResult(record);
+    }
+
+    /**
+     * 批阅主观题：一次提交这份答卷所有主观题的得分与评语。
+     * marks 每项 {questionId, score, comment}
+     */
+    @Transactional
+    public void markRecord(Long recordId, List<Map<String, Object>> marks, Long teacherId) {
+        ExamRecord record = recordMapper.selectById(recordId);
+        if (record == null) {
+            throw new BusinessException("记录不存在");
+        }
+        ExamPaper paper = paperMapper.selectById(record.getPaperId());
+        if (paper == null) {
+            throw new BusinessException("试卷不存在");
+        }
+        checkOwner(paper.getCourseId(), teacherId);
 
         List<PaperQuestion> pqs = paperQuestionMapper.selectList(new LambdaQueryWrapper<PaperQuestion>()
-                .eq(PaperQuestion::getPaperId, record.getPaperId()));
-        List<ExamResultVO.AnswerDetail> details = new ArrayList<>();
+                .eq(PaperQuestion::getPaperId, paper.getId()));
+        Map<Long, Integer> fullScoreMap = new HashMap<>();
         for (PaperQuestion pq : pqs) {
-            Question q = questionMapper.selectById(pq.getQuestionId());
-            if (q == null) {
-                continue;
-            }
-            String your = answers.getOrDefault(String.valueOf(q.getId()), "");
-            boolean correct = normalize(your).equals(normalize(q.getAnswer()));
-            ExamResultVO.AnswerDetail detail = new ExamResultVO.AnswerDetail();
-            detail.setQuestionId(q.getId());
-            detail.setTitle(q.getTitle());
-            detail.setYourAnswer(your);
-            detail.setRightAnswer(q.getAnswer());
-            detail.setCorrect(correct);
-            detail.setScore(correct ? pq.getScore() : 0);
-            detail.setAnalysis(q.getAnalysis());
-            details.add(detail);
+            fullScoreMap.put(pq.getQuestionId(), pq.getScore() == null ? 0 : pq.getScore());
         }
 
-        ExamResultVO vo = new ExamResultVO();
-        vo.setRecordId(record.getId());
-        vo.setScore(record.getScore());
-        vo.setTotalScore(paper == null ? 100 : paper.getTotalScore());
-        vo.setPassScore(paper == null ? 60 : paper.getPassScore());
-        vo.setPassed(record.getPassed() != null && record.getPassed() == 1);
-        vo.setDetails(details);
-        return vo;
+        int subjective = 0;
+        List<Long> markedQuestionIds = new ArrayList<>();
+        if (marks != null) {
+            for (Map<String, Object> mark : marks) {
+                if (mark.get("questionId") == null) {
+                    continue;
+                }
+                Long questionId = Long.valueOf(mark.get("questionId").toString());
+                int full = fullScoreMap.getOrDefault(questionId, 0);
+                int score = mark.get("score") == null ? 0 : parseScore(mark.get("score"));
+                if (score < 0) {
+                    score = 0;
+                }
+                if (score > full) {
+                    score = full;
+                }
+                subjective += score;
+                markedQuestionIds.add(questionId);
+
+                ExamMark exists = markMapper.selectOne(new LambdaQueryWrapper<ExamMark>()
+                        .eq(ExamMark::getRecordId, recordId)
+                        .eq(ExamMark::getQuestionId, questionId)
+                        .last("limit 1"));
+                ExamMark entity = exists == null ? new ExamMark() : exists;
+                entity.setRecordId(recordId);
+                entity.setQuestionId(questionId);
+                entity.setScore(score);
+                entity.setComment(mark.get("comment") == null ? null : mark.get("comment").toString());
+                entity.setTeacherId(teacherId);
+                if (exists == null) {
+                    markMapper.insert(entity);
+                } else {
+                    markMapper.updateById(entity);
+                }
+            }
+        }
+
+        int objective = record.getObjectiveScore() == null ? 0 : record.getObjectiveScore();
+        int total = objective + subjective;
+        ExamRecord update = new ExamRecord();
+        update.setId(recordId);
+        update.setSubjectiveScore(subjective);
+        update.setScore(total);
+        update.setPassed(passFlag(total, paper));
+        update.setMarkStatus(2);
+        update.setMarkTime(LocalDateTime.now());
+        update.setMarkerId(teacherId);
+        recordMapper.updateById(update);
+        log.debug("答卷 {} 批阅完成，主观题 {} 题，合计 {} 分", recordId, markedQuestionIds.size(), total);
     }
 
     /** 教师端：本课程所有考试记录 */
@@ -299,6 +483,127 @@ public class ExamService {
             }
         }
         return result;
+    }
+
+    // ---------------- 判分与结果组装 ----------------
+
+    private ExamResultVO buildResult(ExamRecord record) {
+        ExamPaper paper = paperMapper.selectById(record.getPaperId());
+        Map<String, String> answers = readJson(record.getAnswersJson());
+        List<ExamMark> marks = markMapper.selectList(new LambdaQueryWrapper<ExamMark>()
+                .eq(ExamMark::getRecordId, record.getId()));
+        Map<Long, ExamMark> markMap = new HashMap<>();
+        for (ExamMark mark : marks) {
+            markMap.put(mark.getQuestionId(), mark);
+        }
+
+        List<PaperQuestion> pqs = paperQuestionMapper.selectList(new LambdaQueryWrapper<PaperQuestion>()
+                .eq(PaperQuestion::getPaperId, record.getPaperId()));
+        List<ExamResultVO.AnswerDetail> details = new ArrayList<>();
+        for (PaperQuestion pq : pqs) {
+            Question q = questionMapper.selectById(pq.getQuestionId());
+            if (q == null) {
+                continue;
+            }
+            int type = q.getType() == null ? TYPE_SINGLE : q.getType();
+            String your = answers.getOrDefault(String.valueOf(q.getId()), "");
+            int fullScore = pq.getScore() == null ? 0 : pq.getScore();
+
+            ExamResultVO.AnswerDetail detail = new ExamResultVO.AnswerDetail();
+            detail.setQuestionId(q.getId());
+            detail.setType(type);
+            detail.setTitle(q.getTitle());
+            detail.setYourAnswer(your);
+            detail.setFullScore(fullScore);
+            detail.setRightAnswer(q.getAnswer());
+            detail.setReferenceAnswer(q.getReferenceAnswer());
+            detail.setAnalysis(q.getAnalysis());
+
+            if (type == TYPE_ESSAY) {
+                detail.setNeedManual(true);
+                ExamMark mark = markMap.get(q.getId());
+                detail.setScore(mark == null ? null : mark.getScore());
+                detail.setComment(mark == null ? null : mark.getComment());
+                detail.setCorrect(mark == null ? null
+                        : (mark.getScore() != null && mark.getScore() >= fullScore));
+            } else {
+                boolean correct = isCorrect(q, your);
+                detail.setNeedManual(false);
+                detail.setCorrect(correct);
+                detail.setScore(correct ? fullScore : 0);
+            }
+            details.add(detail);
+        }
+
+        ExamResultVO vo = new ExamResultVO();
+        vo.setRecordId(record.getId());
+        vo.setScore(record.getScore());
+        vo.setObjectiveScore(record.getObjectiveScore());
+        vo.setSubjectiveScore(record.getSubjectiveScore());
+        vo.setMarkStatus(record.getMarkStatus());
+        vo.setTotalScore(paper == null ? 100 : paper.getTotalScore());
+        vo.setPassScore(paper == null ? 60 : paper.getPassScore());
+        vo.setPassed(record.getPassed() != null && record.getPassed() == 1);
+        vo.setDetails(details);
+        return vo;
+    }
+
+    /** 判分入口：按题型分派 */
+    private boolean isCorrect(Question q, String your) {
+        int type = q.getType() == null ? TYPE_SINGLE : q.getType();
+        String expected = q.getAnswer() == null ? "" : q.getAnswer();
+        if (type == TYPE_BLANK) {
+            return matchBlank(expected, your);
+        }
+        if (type == TYPE_ESSAY) {
+            return false;
+        }
+        return normalize(your).equals(normalize(expected));
+    }
+
+    /**
+     * 填空判分：按 | 拆空，逐空比对；同一空可以有多种正确写法，用 ~ 分隔。
+     * 比较时忽略大小写、首尾空白与全角空格。
+     */
+    private boolean matchBlank(String expected, String actual) {
+        if (expected.isBlank() || actual == null || actual.isBlank()) {
+            return false;
+        }
+        String[] expectedParts = expected.split("\\|", -1);
+        String[] actualParts = actual.split("\\|", -1);
+        if (expectedParts.length != actualParts.length) {
+            return false;
+        }
+        for (int i = 0; i < expectedParts.length; i++) {
+            Set<String> accepted = new HashSet<>();
+            for (String one : expectedParts[i].split("~")) {
+                accepted.add(clean(one));
+            }
+            if (!accepted.contains(clean(actualParts[i]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** 清洗：去首尾空白、全角空格、字母统一小写 */
+    private String clean(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace('\u3000', ' ').trim().toLowerCase();
+    }
+
+    private int parseScore(Object value) {
+        try {
+            return (int) Math.round(Double.parseDouble(value.toString()));
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private int passFlag(int score, ExamPaper paper) {
+        return score >= (paper.getPassScore() == null ? 60 : paper.getPassScore()) ? 1 : 0;
     }
 
     // ---------------- 工具方法 ----------------

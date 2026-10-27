@@ -47,6 +47,9 @@ CREATE TABLE course (
     cover         VARCHAR(255)          COMMENT '封面图',
     description   TEXT                  COMMENT '课程简介',
     status        TINYINT      NOT NULL DEFAULT 0 COMMENT '0草稿 1待审 2已发布 3下架 4驳回',
+    enroll_audit  TINYINT      NOT NULL DEFAULT 0 COMMENT '选课是否需要审核 1需要 0不需要',
+    resource_downloadable TINYINT NOT NULL DEFAULT 1 COMMENT '课件资料是否允许下载 1允许 0仅在线查看',
+    export_scope  VARCHAR(16)  NOT NULL DEFAULT 'ENROLLED' COMMENT '资料导出范围 NONE/ENROLLED/ALL',
     reject_reason VARCHAR(255)          COMMENT '驳回理由',
     view_count    INT          NOT NULL DEFAULT 0,
     create_time   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -88,7 +91,7 @@ CREATE TABLE enrollment (
     id          BIGINT   NOT NULL AUTO_INCREMENT,
     user_id     BIGINT   NOT NULL,
     course_id   BIGINT   NOT NULL,
-    status      TINYINT  NOT NULL DEFAULT 1 COMMENT '1在读 0退课',
+    status      TINYINT  NOT NULL DEFAULT 1 COMMENT '0退课 1在读 2待审核 3已拒绝',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_user_course (user_id, course_id),
@@ -141,10 +144,11 @@ CREATE TABLE submission (
 CREATE TABLE question (
     id           BIGINT       NOT NULL AUTO_INCREMENT,
     course_id    BIGINT       NOT NULL,
-    type         TINYINT      NOT NULL COMMENT '1单选 2多选 3判断',
+    type         TINYINT      NOT NULL COMMENT '1单选 2多选 3判断 4填空 5问答',
     title        VARCHAR(500) NOT NULL,
     options_json TEXT                  COMMENT '[{"key":"A","text":"..."}]',
-    answer       VARCHAR(50)  NOT NULL COMMENT '多选逗号分隔，判断T/F',
+    answer       TEXT                  COMMENT '标准答案；填空多空用 | 分隔、同空多写法用 ~ 分隔；问答题可空',
+    reference_answer TEXT              COMMENT '问答题参考答案（无标准答案，供教师批阅参考）',
     analysis     VARCHAR(1000)         COMMENT '解析',
     difficulty   TINYINT      NOT NULL DEFAULT 1 COMMENT '1简单 2中等 3困难',
     create_time  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -183,13 +187,32 @@ CREATE TABLE exam_record (
     paper_id     BIGINT   NOT NULL,
     user_id      BIGINT   NOT NULL,
     answers_json TEXT              COMMENT '{"题目ID":"A,C"}',
-    score        INT               COMMENT '得分',
+    score        INT               COMMENT '总分（客观题自动分 + 主观题教师分）',
+    objective_score INT DEFAULT 0  COMMENT '客观题自动判分得分',
+    subjective_score INT DEFAULT 0 COMMENT '主观题教师给分',
+    mark_status  TINYINT  NOT NULL DEFAULT 0 COMMENT '0无需批阅 1待批阅 2已批阅',
+    mark_time    DATETIME          COMMENT '批阅时间',
+    marker_id    BIGINT            COMMENT '批阅教师',
     passed       TINYINT           COMMENT '1及格 0不及格',
     start_time   DATETIME          COMMENT '开始答题时间',
     submit_time  DATETIME          COMMENT '交卷时间',
     PRIMARY KEY (id),
     KEY idx_user_paper (user_id, paper_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '考试记录';
+
+-- ---------------- 13.1 主观题批阅明细（v3 新增） ----------------
+CREATE TABLE exam_mark (
+    id          BIGINT   NOT NULL AUTO_INCREMENT,
+    record_id   BIGINT   NOT NULL COMMENT '答卷记录',
+    question_id BIGINT   NOT NULL COMMENT '题目',
+    score       INT      NOT NULL DEFAULT 0 COMMENT '本题得分',
+    comment     VARCHAR(500) COMMENT '批阅评语',
+    teacher_id  BIGINT   COMMENT '批阅教师',
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_record_question (record_id, question_id),
+    KEY idx_record (record_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '主观题批阅明细';
 
 -- ---------------- 14. 讨论帖 ----------------
 CREATE TABLE discussion_post (
@@ -226,6 +249,31 @@ CREATE TABLE sys_notice (
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '系统公告';
+
+-- ---------------- 17. 课程收藏（v2 新增） ----------------
+CREATE TABLE favorite (
+    id          BIGINT   NOT NULL AUTO_INCREMENT,
+    user_id     BIGINT   NOT NULL,
+    course_id   BIGINT   NOT NULL,
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_course (user_id, course_id),
+    KEY idx_course (course_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '课程收藏';
+
+-- ---------------- 18. 学习笔记（v2 新增） ----------------
+CREATE TABLE study_note (
+    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id     BIGINT       NOT NULL,
+    course_id   BIGINT       NOT NULL,
+    chapter_id  BIGINT                COMMENT '可空，挂在章节上时填写',
+    title       VARCHAR(120) NOT NULL DEFAULT '' COMMENT '标题，留空时取正文前 20 字',
+    content     TEXT         NOT NULL,
+    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_user_course (user_id, course_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '学习笔记';
 
 -- ============================================================
 -- 初始化数据
@@ -275,8 +323,15 @@ INSERT INTO question (course_id, type, title, options_json, answer, analysis, di
 (1, 2, '下列属于面向对象三大特性的有？', '[{"key":"A","text":"封装"},{"key":"B","text":"继承"},{"key":"C","text":"多态"},{"key":"D","text":"重载"}]', 'A,B,C', '三大特性是封装、继承、多态；重载只是方法的一种形式。', 2),
 (1, 2, '下列哪些是 Java 的基本数据类型？', '[{"key":"A","text":"int"},{"key":"B","text":"String"},{"key":"C","text":"boolean"},{"key":"D","text":"double"}]', 'A,C,D', 'String 是引用类型（类），不是基本类型。', 2),
 (1, 2, '关于集合，下列说法正确的有？', '[{"key":"A","text":"ArrayList 底层是数组"},{"key":"B","text":"HashMap 允许一个 null 键"},{"key":"C","text":"LinkedList 查询比 ArrayList 快"},{"key":"D","text":"HashSet 元素不重复"}]', 'A,B,D', 'LinkedList 插入删除快、随机访问慢，C 错误。', 3),
-(1, 3, 'Java 支持类的多重继承。', NULL, 'F', 'Java 类不支持多重继承，但接口可以多实现。', 1),
-(1, 3, 'final 修饰的变量不能被重新赋值。', NULL, 'T', 'final 变量只能赋值一次。', 1);
+(1, 3, 'Java 支持类的多重继承。', NULL, 'F', NULL, 'Java 类不支持多重继承，但接口可以多实现。', 1),
+(1, 3, 'final 修饰的变量不能被重新赋值。', NULL, 'T', NULL, 'final 变量只能赋值一次。', 1),
+(1, 4, 'Java 中用于定义常量的关键字是 ______。', NULL, 'final',
+ 'final 修饰的变量只能赋值一次，习惯上配合 static 作为常量。', 1),
+(1, 4, 'HTTP 默认端口是 ______，HTTPS 默认端口是 ______。', NULL, '80|443',
+ '两个空都要填对才得分，多空之间用 | 分隔。', 1),
+(1, 5, '简述 Java 中接口与抽象类的主要区别，并各举一个适用场景。', NULL,
+ '1) 抽象类可以有构造方法与成员变量，接口以常量与抽象方法为主；2) 一个类只能继承一个抽象类，但可实现多个接口；3) 抽象类表达 is-a 关系，接口表达 has-a / 能力约定。场景：模板化流程用抽象类，跨类型能力（如 Comparable）用接口。',
+ '问答题不设标准答案，教师按要点给分。', 3);
 
 INSERT INTO exam_paper (course_id, title, total_score, pass_score, duration, status) VALUES
 (1, 'Java 基础随堂测验', 100, 60, 30, 1);

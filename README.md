@@ -15,6 +15,7 @@
 | UI 组件 | Element Plus | 2.8 |
 | 状态与路由 | Pinia + Vue Router 4 | — |
 | 图表 | ECharts | 5.5 |
+| 文档解析 | Apache POI（poi-ooxml） | 5.2.5 |
 | 构建 | Maven 3.9.11 / Node 22 | — |
 
 ## 目录结构
@@ -41,7 +42,9 @@ online_learning_system/
 │       ├── router/            路由 + 角色守卫
 │       ├── stores/            Pinia 登录态
 │       └── utils/             Axios 封装
-├── sql/init.sql               建库 + 16 张表 + 演示数据
+├── sql/init.sql               建库 + 17 张表 + 演示数据
+├── sql/upgrade-v3.sql         老库升级到 v3（幂等，可重复执行）
+├── sql/upgrade-v4.sql         老库升级到 v4（幂等，可重复执行）
 ├── scripts/smoke-test.sh      接口冒烟测试（27 项断言）
 ├── docs/screenshots/          联调验收截图
 ├── docker-compose.yml         容器化一键部署
@@ -156,6 +159,53 @@ docker compose up -d
     → 学情看板 / 我的成绩统计
 ```
 
+## v3 功能清单（2026-10-27 迭代）
+
+老库升级（幂等，可重复执行）：
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 online_learning < sql/upgrade-v3.sql
+```
+
+> 必须用 `utf8mb4` 客户端，否则存储过程里的中文注释会报 `Incorrect string value`。
+
+| # | 能力 | 关键实现 |
+|---|---|---|
+| 1 | 课件在线预览（PDF / PPT / DOCX / XLSX / 图片 / 音视频） | 后端 `DocPreviewService` 用 POI 把 docx→段落块、pptx→逐页（含图片 base64）、xlsx→工作表；PDF 走 iframe 原生渲染。前端 `FilePreview.vue` 统一弹窗，下载按钮受课程开关控制 |
+| 2 | 弹窗被遮挡修复 | 全站 `el-dialog` / `el-drawer` 加 `append-to-body`（共 13 处），脱离父级层叠上下文 |
+| 3 | 填空题 / 问答题 | 题型 1 单选 2 多选 3 判断 **4 填空** **5 问答**；填空按 `|` 分空、`~` 同空多写法、忽略大小写与全角空格；问答不自动判分，落 `exam_mark` 由教师打分 |
+| 4 | 统一「选择文件上传」 | `FileUploader.vue` 封装 `el-upload`，已接入章节课件、章节视频、作业附件、作业模板等所有上传位 |
+| 5 | 选课审核 + 名单导入 | `enrollment.status` 扩展为 0 退课 / 1 在读 / **2 待审核** / 3 已拒绝；教师端一键审批 + 按登录名批量导入已注册学生 |
+| 6 | 下载与导出权限 | 课程 `resource_downloadable` 控制课件下载（关闭后 `/files/download` 返回 403）；`export_scope` 取 `NONE` / `ENROLLED` / `ALL` 控制试卷、作业导出为 docx |
+| 7 | 管理员批量导入用户 | `/api/admin/users/import` 逐行校验（用户名 4-20 位字母数字下划线、角色合法、手机号可选），返回逐行成功/失败原因；`/users/import-template` 下载 UTF-8 BOM 的 CSV 模板 |
+| 8 | 体验增强 | 学生端看到「待教师批阅 / 已批阅 + 教师评语」，教师端答卷列表支持查看与改分，作业可带附件模板，学习页课件卡片直接点击查看 |
+
+新增依赖：`org.apache.poi:poi-ooxml:5.2.5`（后端 `pom.xml`）。
+
+## v4 功能清单（2026-10-27 第二轮迭代）
+
+老库升级（幂等，可重复执行）：
+
+```bash
+mysql -u root -p --default-character-set=utf8mb4 online_learning < sql/upgrade-v4.sql
+```
+
+| # | 能力 | 关键实现 |
+|---|---|---|
+| 1 | 封面 / 头像可选文件 | 建课、编辑课程弹窗的封面改为 `FileUploader` 选择图片 + 缩略图预览；个人中心头像同样可上传 |
+| 2 | 个人中心名片头像被遮挡 | `.id-bg` 显式 `z-index: 0`、`.id-body` 抬到 `z-index: 1` + `margin-top: -38px`，橙黄渐变带不再压住头像 |
+| 3 | 富文本编辑 + 粘贴图片 | 自制 `RichEditor.vue`（加粗/斜体/下划线/删除线/标题/列表/引用/代码块/撤销/插图）；剪贴板图片自动上传后插入 `<img>`，外部 HTML 降级为纯文本。接入学习笔记、作业作答、问答题作答、作业笔记 |
+| 4 | 作业/测验只能提交一次 | 后端 `AssignmentService.submit`、`ExamService.submit` 在 Service 层拦截重复提交；前端已提交态变只读详情 + 「已完成」标记 + 「作业笔记」入口 |
+| 5 | 作答自动保存 | localStorage 草稿 `ol-draft:assignment:{id}` / `ol-draft:exam:{paperId}`，输入防抖 800~1000ms 保存，关闭弹窗 / 组件卸载 / 点「保存并退出」时落盘，重新进入自动恢复 |
+| 6 | 学生端导出入口 | 学习页与课程详情页的作业、测验卡片直接给「导出」按钮，按课程 `export_scope` 决定是否显示（`NONE` 隐藏、`ENROLLED` 仅选课学生、`ALL` 平台用户） |
+| 7 | 课程详情「作业测试」页签 | 与课程介绍 / 目录 / 课件并列；`GET /api/public/courses/{id}/works` 一次返回作业 + 测验 + 完成统计，状态分 未开始 / 进行中 / 已完成 / 已批阅 / 已截止 |
+| 8 | 组卷 / 批阅弹窗彻底修复 | `el-drawer` / `el-dialog` 全部补 `append-to-body`，组卷面板不再被 `#FDF7F1` 背景裁切 |
+| 9 | 题库导入导出 | `GET /courses/{id}/questions/export`、`GET /questions/import-template`、`POST /courses/{id}/questions/import`；表头 `题型,题干,选项A~F,答案,参考答案,解析,难度`，逐行校验并返回失败原因 |
+| 10 | 作业 / 测验时间窗 | `assignment.start_time`、`exam_paper.start_time/end_time`；教师端可设开始与结束，学生只能在窗口内作答（后端 `checkWindow` 兜底） |
+| 11 | 全格式原样预览 + PPT 放映 | `DocPreviewService` 扩到旧二进制 `doc/ppt/xls`（poi-scratchpad：HWPF / HSLF / HSSF）；`PublicFileController` 支持 `rid` 与 `url` 双寻址，作业附件、笔记图片、头像都能预览；`FilePreview` 对 pptx 新增全屏放映（方向键 / 空格翻页、3·5·8 秒自动播放、Esc 退出） |
+
+新增依赖：`org.apache.poi:poi-scratchpad:5.2.5`。
+
 ## 角色权限设计
 
 - 登录态由 JWT 承载，请求头 `Authorization: Bearer <token>`
@@ -163,15 +213,17 @@ docker compose up -d
 - `@RequireRole("TEACHER")` 注解标注在 Controller 上，拦截器比对角色
 - 越权访问返回 `403`，未登录返回 `401`，前端拦截器统一跳登录页
 
-## 数据库表（16 张）
+## 数据库表（17 张）
 
 `sys_user`、`course_category`、`course`、`chapter`、`course_resource`、`enrollment`、
 `study_progress`、`assignment`、`submission`、`question`、`exam_paper`、`paper_question`、
-`exam_record`、`discussion_post`、`discussion_reply`、`sys_notice`
+`exam_record`、`exam_mark`（v3 新增·主观题批阅明细）、`discussion_post`、`discussion_reply`、`sys_notice`
 
 ## 已知约束
 
 - 密码采用 **MD5 + 随机盐**（按实训要求），生产环境应换 BCrypt
 - 文件存储为本地磁盘 `upload/`，可平滑迁移 MinIO / OSS
 - 视频直接使用 `<video>` 播放 MP4，不做转码
+- 课件预览为纯 Java 解析（未依赖 LibreOffice）：docx / pptx / xlsx 可还原文字、表格与内嵌图片，
+  但 SmartArt、公式、复杂动画等版式不保证 100% 一致；单文件图片 base64 上限 4MB
 - 未引入 Redis：缓存为加分项，为避免本机 Redis 3.0 兼容问题暂不启用

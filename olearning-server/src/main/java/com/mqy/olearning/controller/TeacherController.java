@@ -3,6 +3,7 @@ package com.mqy.olearning.controller;
 import com.mqy.olearning.common.Result;
 import com.mqy.olearning.dto.CourseDTO;
 import com.mqy.olearning.dto.CourseVO;
+import com.mqy.olearning.dto.ExamResultVO;
 import com.mqy.olearning.dto.QuestionVO;
 import com.mqy.olearning.entity.*;
 import com.mqy.olearning.security.RequireRole;
@@ -12,8 +13,14 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +42,17 @@ public class TeacherController {
     private final EnrollmentService enrollmentService;
     private final StatsService statsService;
     private final CategoryService categoryService;
+    private final QuestionIOService questionIOService;
+
+    /** 生成 xlsx 下载响应 */
+    private ResponseEntity<byte[]> xlsxResponse(byte[] bytes, String fileName) {
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encoded)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(bytes);
+    }
 
     // ---------------- 课程 ----------------
 
@@ -175,6 +193,26 @@ public class TeacherController {
         return Result.ok();
     }
 
+    @Operation(summary = "题库导出为 xlsx（可直接改完再导回）")
+    @GetMapping("/courses/{courseId}/questions/export")
+    public ResponseEntity<byte[]> exportQuestions(@PathVariable Long courseId) {
+        byte[] bytes = questionIOService.export(courseId, UserContext.userId());
+        return xlsxResponse(bytes, "题库导出.xlsx");
+    }
+
+    @Operation(summary = "下载题库导入模板")
+    @GetMapping("/questions/import-template")
+    public ResponseEntity<byte[]> questionTemplate() {
+        return xlsxResponse(questionIOService.template(), "题库导入模板.xlsx");
+    }
+
+    @Operation(summary = "从 xlsx 导入题目，逐行返回成功/失败明细")
+    @PostMapping("/courses/{courseId}/questions/import")
+    public Result<Map<String, Object>> importQuestions(@PathVariable Long courseId,
+                                                       @RequestParam("file") MultipartFile file) {
+        return Result.ok(questionIOService.importQuestions(courseId, UserContext.userId(), file));
+    }
+
     // ---------------- 试卷 ----------------
 
     @Operation(summary = "课程试卷列表")
@@ -218,12 +256,54 @@ public class TeacherController {
         return Result.ok();
     }
 
+    @Operation(summary = "某份试卷的答卷列表（含待批阅状态）")
+    @GetMapping("/papers/{id}/records")
+    public Result<List<Map<String, Object>>> paperRecords(@PathVariable Long id) {
+        return Result.ok(examService.paperRecords(id, UserContext.userId()));
+    }
+
+    @Operation(summary = "答卷详情（教师视角，含参考答案）")
+    @GetMapping("/records/{id}")
+    public Result<ExamResultVO> recordDetail(@PathVariable Long id) {
+        return Result.ok(examService.teacherRecordDetail(id, UserContext.userId()));
+    }
+
+    @Operation(summary = "批阅主观题：body.marks = [{questionId, score, comment}]")
+    @PostMapping("/records/{id}/mark")
+    @SuppressWarnings("unchecked")
+    public Result<Void> markRecord(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        List<Map<String, Object>> marks = (List<Map<String, Object>>) body.get("marks");
+        examService.markRecord(id, marks, UserContext.userId());
+        return Result.ok();
+    }
+
     // ---------------- 学生与学情 ----------------
 
     @Operation(summary = "本课程学生名单与进度")
     @GetMapping("/courses/{courseId}/students")
     public Result<List<Map<String, Object>>> students(@PathVariable Long courseId) {
         return Result.ok(enrollmentService.students(courseId, UserContext.userId()));
+    }
+
+    @Operation(summary = "待审核的选课申请")
+    @GetMapping("/courses/{courseId}/enroll-applies")
+    public Result<List<Map<String, Object>>> enrollApplies(@PathVariable Long courseId) {
+        return Result.ok(enrollmentService.pendingApplies(courseId, UserContext.userId()));
+    }
+
+    @Operation(summary = "审批选课申请：body.pass = true/false")
+    @PostMapping("/enroll-applies/{id}/audit")
+    public Result<Void> auditApply(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        boolean pass = Boolean.parseBoolean(String.valueOf(body.get("pass")));
+        enrollmentService.auditApply(id, pass, UserContext.userId());
+        return Result.ok();
+    }
+
+    @Operation(summary = "导入学生名单：body.text 每行一个登录名")
+    @PostMapping("/courses/{courseId}/students/import")
+    public Result<Map<String, Object>> importStudents(@PathVariable Long courseId,
+                                                      @RequestBody Map<String, String> body) {
+        return Result.ok(enrollmentService.importStudents(courseId, UserContext.userId(), body.get("text")));
     }
 
     @Operation(summary = "本课程考试记录")

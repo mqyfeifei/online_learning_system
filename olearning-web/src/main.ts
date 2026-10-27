@@ -7,6 +7,8 @@ import 'element-plus/dist/index.css'
 
 import App from './App.vue'
 import router from './router'
+// 主题必须排在 element-plus 之后，才能覆盖它的 CSS 变量
+import './styles/theme.css'
 import './style.css'
 
 const app = createApp(App)

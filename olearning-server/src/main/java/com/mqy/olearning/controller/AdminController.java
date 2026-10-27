@@ -66,6 +66,23 @@ public class AdminController {
         return Result.ok();
     }
 
+    @Operation(summary = "批量导入用户：body.text 为 CSV 文本，逐行校验")
+    @PostMapping("/users/import")
+    public Result<Map<String, Object>> importUsers(@RequestBody Map<String, String> body) {
+        return Result.ok(userService.importUsers(body.get("text")));
+    }
+
+    @Operation(summary = "下载导入模板（CSV，UTF-8 BOM）")
+    @GetMapping("/users/import-template")
+    public org.springframework.http.ResponseEntity<byte[]> importTemplate() {
+        byte[] bytes = userService.importTemplate();
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''%E7%94%A8%E6%88%B7%E5%AF%BC%E5%85%A5%E6%A8%A1%E6%9D%BF.csv")
+                .contentType(org.springframework.http.MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .body(bytes);
+    }
+
     // ---------------- 课程审核 ----------------
 
     @Operation(summary = "课程列表（默认查待审核 status=1）")

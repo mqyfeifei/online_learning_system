@@ -15,4 +15,10 @@ public class CourseDTO {
     private Long categoryId;
     private String cover;
     private String description;
+    /** 选课是否需要审核：1 需要 0 不需要 */
+    private Integer enrollAudit;
+    /** 课件资料是否允许下载：1 允许 0 仅在线查看 */
+    private Integer resourceDownloadable;
+    /** 资料导出范围：NONE / ENROLLED / ALL */
+    private String exportScope;
 }

@@ -95,7 +95,14 @@ public class CourseService {
                 .eq(Course::getTeacherId, teacherId)
                 .eq(status != null, Course::getStatus, status)
                 .orderByDesc(Course::getCreateTime));
-        return courses.stream().map(c -> toVO(c, null)).collect(Collectors.toList());
+        return courses.stream().map(c -> {
+            CourseVO vo = toVO(c, null);
+            Long pending = enrollmentMapper.selectCount(new LambdaQueryWrapper<Enrollment>()
+                    .eq(Enrollment::getCourseId, c.getId())
+                    .eq(Enrollment::getStatus, 2));
+            vo.setPendingApplyCount(pending == null ? 0 : pending.intValue());
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     public Long save(CourseDTO dto, Long teacherId) {
@@ -104,11 +111,26 @@ public class CourseService {
         course.setCategoryId(dto.getCategoryId());
         course.setCover(dto.getCover());
         course.setDescription(dto.getDescription());
+        course.setEnrollAudit(dto.getEnrollAudit());
+        course.setResourceDownloadable(dto.getResourceDownloadable());
+        if (StringUtils.hasText(dto.getExportScope())) {
+            String scope = dto.getExportScope().toUpperCase();
+            course.setExportScope(List.of("NONE", "ENROLLED", "ALL").contains(scope) ? scope : "ENROLLED");
+        }
 
         if (dto.getId() == null) {
             course.setTeacherId(teacherId);
             course.setStatus(0);
             course.setViewCount(0);
+            if (course.getEnrollAudit() == null) {
+                course.setEnrollAudit(0);
+            }
+            if (course.getResourceDownloadable() == null) {
+                course.setResourceDownloadable(1);
+            }
+            if (course.getExportScope() == null) {
+                course.setExportScope("ENROLLED");
+            }
             courseMapper.insert(course);
             return course.getId();
         }
@@ -205,12 +227,14 @@ public class CourseService {
         vo.setStudentCount(studentCount == null ? 0 : studentCount.intValue());
 
         if (userId != null) {
-            Long enrolled = enrollmentMapper.selectCount(new LambdaQueryWrapper<Enrollment>()
+            Enrollment enrollment = enrollmentMapper.selectOne(new LambdaQueryWrapper<Enrollment>()
                     .eq(Enrollment::getUserId, userId)
                     .eq(Enrollment::getCourseId, course.getId())
-                    .eq(Enrollment::getStatus, 1));
-            vo.setEnrolled(enrolled != null && enrolled > 0);
-            vo.setProgress(calcProgress(userId, course.getId(), vo.getChapterCount()));
+                    .last("limit 1"));
+            int status = enrollment == null ? 0 : (enrollment.getStatus() == null ? 0 : enrollment.getStatus());
+            vo.setEnrollStatus(enrollment == null ? null : status);
+            vo.setEnrolled(status == 1);
+            vo.setProgress(status == 1 ? calcProgress(userId, course.getId(), vo.getChapterCount()) : 0);
         }
         return vo;
     }

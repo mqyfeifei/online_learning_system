@@ -41,15 +41,36 @@ public class AssignmentService {
         for (Assignment a : list) {
             Map<String, Object> item = new HashMap<>();
             item.put("assignment", a);
+            Submission sub = null;
             if (userId != null) {
-                Submission sub = submissionMapper.selectOne(new LambdaQueryWrapper<Submission>()
+                sub = submissionMapper.selectOne(new LambdaQueryWrapper<Submission>()
                         .eq(Submission::getAssignmentId, a.getId())
                         .eq(Submission::getUserId, userId));
                 item.put("submission", sub);
             }
+            item.put("workType", "ASSIGNMENT");
+            item.put("state", stateOf(a, sub));
             result.add(item);
         }
         return result;
+    }
+
+    /**
+     * 学生视角的作答状态：NOT_START / ONGOING / SUBMITTED / GRADED / EXPIRED。
+     * 前端据此渲染「未开始 / 进行中 / 已完成 / 已截止」，也用于禁用作答入口。
+     */
+    private String stateOf(Assignment a, Submission sub) {
+        if (sub != null) {
+            return sub.getStatus() != null && sub.getStatus() == 1 ? "GRADED" : "SUBMITTED";
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (a.getStartTime() != null && now.isBefore(a.getStartTime())) {
+            return "NOT_START";
+        }
+        if (a.getDeadline() != null && now.isAfter(a.getDeadline())) {
+            return "EXPIRED";
+        }
+        return "ONGOING";
     }
 
     public void save(Assignment assignment, Long teacherId) {
@@ -72,7 +93,7 @@ public class AssignmentService {
                 .eq(Submission::getAssignmentId, id));
     }
 
-    /** 学生提交：必须先选课、且未过截止时间；重复提交视为修改 */
+    /** 学生提交：必须先选课、在「开始时间 ~ 截止时间」内、且只能提交一次 */
     public void submit(Long userId, Long assignmentId, String content, String attachUrl) {
         Assignment assignment = assignmentMapper.selectById(assignmentId);
         if (assignment == null) {
@@ -81,35 +102,35 @@ public class AssignmentService {
         if (!enrollmentService.isEnrolled(userId, assignment.getCourseId())) {
             throw new BusinessException("请先选修该课程");
         }
-        if (assignment.getDeadline() != null && LocalDateTime.now().isAfter(assignment.getDeadline())) {
+        LocalDateTime now = LocalDateTime.now();
+        if (assignment.getStartTime() != null && now.isBefore(assignment.getStartTime())) {
+            throw new BusinessException("作业尚未开放，开放时间：" + assignment.getStartTime()
+                    .toString().replace('T', ' ').substring(0, 16));
+        }
+        if (assignment.getDeadline() != null && now.isAfter(assignment.getDeadline())) {
             throw new BusinessException("作业已截止，无法提交");
         }
 
         Submission exists = submissionMapper.selectOne(new LambdaQueryWrapper<Submission>()
                 .eq(Submission::getAssignmentId, assignmentId)
                 .eq(Submission::getUserId, userId));
+        if (exists != null) {
+            // 已提交的作业不允许二次修改，需要改动请联系老师撤回
+            throw new BusinessException(exists.getStatus() != null && exists.getStatus() == 1
+                    ? "作业已批阅，不能再提交" : "作业已提交，不能重复提交");
+        }
 
-        if (exists == null) {
-            Submission submission = new Submission();
-            submission.setAssignmentId(assignmentId);
-            submission.setUserId(userId);
-            submission.setContent(content);
-            submission.setAttachUrl(attachUrl);
-            submission.setStatus(0);
-            submission.setSubmitTime(LocalDateTime.now());
-            try {
-                submissionMapper.insert(submission);
-            } catch (DuplicateKeyException e) {
-                throw new BusinessException("本作业已提交过，请使用修改功能");
-            }
-        } else {
-            if (exists.getStatus() != null && exists.getStatus() == 1) {
-                throw new BusinessException("作业已批阅，不能再修改");
-            }
-            exists.setContent(content);
-            exists.setAttachUrl(attachUrl);
-            exists.setSubmitTime(LocalDateTime.now());
-            submissionMapper.updateById(exists);
+        Submission submission = new Submission();
+        submission.setAssignmentId(assignmentId);
+        submission.setUserId(userId);
+        submission.setContent(content);
+        submission.setAttachUrl(attachUrl);
+        submission.setStatus(0);
+        submission.setSubmitTime(LocalDateTime.now());
+        try {
+            submissionMapper.insert(submission);
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException("作业已提交，不能重复提交");
         }
     }
 

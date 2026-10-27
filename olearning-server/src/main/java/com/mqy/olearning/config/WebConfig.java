@@ -35,10 +35,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
+                // /api/public/** 不在这里排除：拦截器内部对公开接口做「尽力解析」，
+                // 登录后能带回已选状态与学习进度，未登录则当游客放行
                 .excludePathPatterns(
                         "/api/auth/login",
                         "/api/auth/register",
-                        "/api/public/**",
                         "/api/health",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",

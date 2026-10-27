@@ -57,13 +57,15 @@ public class StudentController {
 
     // ---------------- 选课与学习 ----------------
 
-    @Operation(summary = "选课")
+    @Operation(summary = "选课：开启审核的课程返回 pending=true，等教师审批")
     @PostMapping("/courses/{courseId}/enroll")
-    public Result<Void> enroll(@PathVariable Long courseId) {
-        enrollmentService.enroll(UserContext.userId(), courseId);
-        return Result.ok();
+    public Result<Map<String, Object>> enroll(@PathVariable Long courseId) {
+        String status = enrollmentService.enroll(UserContext.userId(), courseId);
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("status", status);
+        data.put("pending", EnrollmentService.RESULT_PENDING.equals(status));
+        return Result.ok(data);
     }
-
     @Operation(summary = "退课")
     @DeleteMapping("/courses/{courseId}/enroll")
     public Result<Void> cancelEnroll(@PathVariable Long courseId) {

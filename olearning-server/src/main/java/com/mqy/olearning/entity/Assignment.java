@@ -19,6 +19,8 @@ public class Assignment {
     /** 作业要求（列名 requirement，避开 SQL 保留字 require） */
     private String requirement;
     private String attachUrl;
+    /** 开放作答时间；为空表示不限开始时间 */
+    private LocalDateTime startTime;
     private LocalDateTime deadline;
     private LocalDateTime createTime;
 }

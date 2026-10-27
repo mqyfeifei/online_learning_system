@@ -1,0 +1,596 @@
+/* ============================================================
+   设计系统 · 暖米橙
+   一切颜色/圆角/阴影都从这里取，页面里不要再写裸色值
+   ============================================================ */
+
+:root {
+  /* ---------- 主色：活力橙 ---------- */
+  --brand-50: #fff4ef;
+  --brand-100: #ffe6da;
+  --brand-200: #ffcdb8;
+  --brand-300: #ffae8c;
+  --brand-400: #ff8f66;
+  --brand: #ff6b35;
+  --brand-600: #f05a24;
+  --brand-700: #cc4818;
+
+  /* ---------- 辅助色 ---------- */
+  --green: #2fa36b;
+  --green-soft: #e8f6ee;
+  --violet: #7c6cf5;
+  --violet-soft: #efedff;
+  --amber: #f0a52c;
+  --amber-soft: #fdf3e0;
+  --blue: #3b82f6;
+  --blue-soft: #e8f0ff;
+  --red: #d94b3a;
+  --red-soft: #fdeceb;
+
+  /* ---------- 中性：暖灰 ---------- */
+  --ink-900: #2b2622;
+  --ink-700: #4a423b;
+  --ink-500: #6b6259;
+  --ink-400: #8d847a;
+  --ink-300: #b3aaa0;
+  --ink-200: #d8cec3;
+  --ink-100: #f0e7dc;
+
+  /* ---------- 背景与表面 ---------- */
+  --bg: #fdf7f1;
+  --bg-deep: #f7ede2;
+  --surface: #ffffff;
+  --surface-soft: #fffaf5;
+  --surface-sunken: #f9f2ea;
+
+  /* ---------- 圆角 ---------- */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 26px;
+  --r-pill: 999px;
+
+  /* ---------- 阴影 ---------- */
+  --sh-xs: 0 1px 2px rgba(43, 38, 34, 0.05);
+  --sh-sm: 0 2px 8px rgba(43, 38, 34, 0.05);
+  --sh-md: 0 6px 20px rgba(43, 38, 34, 0.07);
+  --sh-lg: 0 14px 40px rgba(43, 38, 34, 0.1);
+  --sh-brand: 0 8px 20px rgba(255, 107, 53, 0.28);
+
+  /* ---------- 字体 ---------- */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+
+  /* ---------- Element Plus 主色映射 ---------- */
+  --el-color-primary: #ff6b35;
+  --el-color-primary-light-3: #ff8f66;
+  --el-color-primary-light-5: #ffb499;
+  --el-color-primary-light-7: #ffd2c2;
+  --el-color-primary-light-8: #ffe1d7;
+  --el-color-primary-light-9: #fff0ea;
+  --el-color-primary-dark-2: #e5561f;
+  --el-color-success: #2fa36b;
+  --el-color-warning: #f0a52c;
+  --el-color-danger: #e5533d;
+  --el-color-info: #8d847a;
+  --el-text-color-primary: #2b2622;
+  --el-text-color-regular: #4a423b;
+  --el-text-color-secondary: #6b6259;
+  --el-border-color: #f0e7dc;
+  --el-border-color-light: #f4ece3;
+  --el-border-color-lighter: #f8f2ea;
+  --el-fill-color-blank: #ffffff;
+  --el-bg-color: #ffffff;
+  --el-border-radius-base: 10px;
+  --el-font-family: var(--font);
+  --el-box-shadow-light: var(--sh-sm);
+}
+
+/* ============================================================
+   基础
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--ink-900);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+::selection {
+  background: var(--brand-200);
+  color: var(--ink-900);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-200);
+  border-radius: var(--r-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-300);
+}
+
+/* ============================================================
+   通用原子类
+   ============================================================ */
+.ol-card {
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  box-shadow: var(--sh-xs);
+}
+
+.ol-card--flat {
+  box-shadow: none;
+}
+
+.ol-card--hover {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  cursor: pointer;
+}
+.ol-card--hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh-md);
+  border-color: var(--brand-200);
+}
+
+.ol-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ol-h1 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  margin: 0;
+  color: var(--ink-900);
+}
+
+.ol-h2 {
+  font-size: 17px;
+  font-weight: 650;
+  margin: 0;
+  color: var(--ink-900);
+}
+
+.ol-sub {
+  color: var(--ink-500);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ol-muted {
+  color: var(--ink-400);
+  font-size: 12.5px;
+}
+
+.ol-divider {
+  height: 1px;
+  background: var(--ink-100);
+  border: 0;
+  margin: 16px 0;
+}
+
+/* ---------- 标签 chip ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 11px;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+  font-weight: 550;
+  background: var(--surface-sunken);
+  color: var(--ink-500);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.chip--brand {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.chip--green {
+  background: var(--green-soft);
+  color: #1f7a4f;
+}
+.chip--violet {
+  background: var(--violet-soft);
+  color: #5a4bcf;
+}
+.chip--amber {
+  background: var(--amber-soft);
+  color: #a86a08;
+}
+.chip--blue {
+  background: var(--blue-soft);
+  color: #2563c9;
+}
+
+/* 可选中的筛选 chip */
+.chip-btn {
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+.chip-btn:hover {
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.chip-btn.is-active {
+  background: var(--ink-900);
+  color: #fff;
+  border-color: var(--ink-900);
+}
+
+/* ---------- 进度条 ---------- */
+.bar {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--ink-100);
+  overflow: hidden;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: linear-gradient(90deg, var(--brand-400), var(--brand));
+  transition: width 0.5s ease;
+}
+.bar--green > i {
+  background: linear-gradient(90deg, #59c48d, var(--green));
+}
+.bar--violet > i {
+  background: linear-gradient(90deg, #a89bff, var(--violet));
+}
+
+/* ---------- 课程封面兜底 ---------- */
+.cover {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  background: linear-gradient(135deg, var(--brand-300) 0%, var(--brand) 100%);
+  border-radius: var(--r-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: 0.5px;
+  padding: 0 16px;
+  text-align: center;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ---------- 空状态 ---------- */
+.ol-empty {
+  padding: 48px 0;
+  text-align: center;
+  color: var(--ink-400);
+  font-size: 13px;
+}
+.ol-empty .icon {
+  font-size: 34px;
+  opacity: 0.35;
+  display: block;
+  margin-bottom: 10px;
+}
+
+/* ---------- 页面进入动画 ---------- */
+.fade-up {
+  animation: fadeUp 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Element Plus 视觉对齐
+   ============================================================ */
+.el-button {
+  border-radius: var(--r-sm);
+  font-weight: 550;
+}
+.el-button--primary {
+  box-shadow: var(--sh-brand);
+}
+.el-button--primary:hover {
+  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.34);
+}
+.el-button.is-text {
+  box-shadow: none;
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper {
+  border-radius: var(--r-sm);
+  box-shadow: 0 0 0 1px var(--ink-100) inset;
+  background: var(--surface);
+}
+.el-input__wrapper:hover,
+.el-select__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--ink-200) inset;
+}
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px var(--brand) inset;
+}
+
+.el-card {
+  border-radius: var(--r-lg);
+  border-color: var(--ink-100);
+  box-shadow: var(--sh-xs) !important;
+}
+
+/* 表格：去掉重边框，表头米色 */
+.el-table {
+  --el-table-border-color: var(--ink-100);
+  --el-table-header-bg-color: var(--surface-sunken);
+  --el-table-row-hover-bg-color: var(--brand-50);
+  border-radius: var(--r-md);
+  font-size: 13.5px;
+}
+.el-table th.el-table__cell {
+  background: var(--surface-sunken) !important;
+  color: var(--ink-500);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+}
+.el-table td.el-table__cell {
+  padding: 12px 0;
+}
+
+.el-tag {
+  border-radius: var(--r-pill);
+  font-weight: 550;
+  border: none;
+}
+
+.el-dialog {
+  border-radius: var(--r-xl);
+  padding: 8px;
+}
+.el-dialog__header {
+  padding: 16px 20px 6px;
+}
+/* 与 header 左右对齐，避免表单控件顶到弹窗边缘 */
+.el-dialog__body {
+  padding: 6px 20px 4px;
+}
+.el-dialog__footer {
+  padding: 8px 20px 4px;
+}
+.el-dialog__title {
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.el-drawer__header {
+  margin-bottom: 12px;
+  padding: 20px 24px 0;
+  font-weight: 700;
+}
+
+.el-dropdown-menu,
+.el-popper.is-light {
+  border-radius: var(--r-md) !important;
+  border-color: var(--ink-100) !important;
+  box-shadow: var(--sh-md) !important;
+}
+
+.el-pagination {
+  --el-pagination-button-bg-color: transparent;
+  font-weight: 550;
+}
+.el-pagination.is-background .el-pager li {
+  border-radius: 9px;
+}
+.el-pagination.is-background .el-pager li.is-active {
+  background: var(--brand);
+}
+
+.el-tabs__item {
+  font-weight: 550;
+  color: var(--ink-500);
+}
+.el-tabs__item.is-active {
+  color: var(--ink-900);
+}
+.el-tabs__active-bar {
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--brand);
+}
+
+.el-message {
+  border-radius: var(--r-md);
+  border-color: var(--ink-100);
+  box-shadow: var(--sh-md);
+}
+.el-message-box {
+  border-radius: var(--r-xl);
+}
+.el-form-item__label {
+  color: var(--ink-700);
+  font-weight: 550;
+}
+.el-progress-bar__outer {
+  background: var(--ink-100);
+}
+
+/* ============================================================
+   后台页面通用结构（教师端 / 管理端）
+   ============================================================ */
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 页面头：左侧标题 + 右侧操作 */
+.ap-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.ap-head h1 {
+  font-size: 21px;
+  font-weight: 730;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+.ap-head p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-400);
+}
+.ap-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 筛选条 */
+.ap-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  padding: 13px 16px;
+}
+.ap-toolbar .grow {
+  flex: 1;
+}
+
+/* 表格卡 */
+.ap-card {
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.ap-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ink-100);
+}
+.ap-card-head h2 {
+  font-size: 15px;
+  font-weight: 680;
+  margin: 0;
+}
+.ap-card-body {
+  padding: 4px 8px 8px;
+}
+.ap-pager {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 16px;
+  border-top: 1px solid var(--ink-100);
+}
+
+/* 指标小卡 */
+.ap-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(184px, 1fr));
+  gap: 14px;
+}
+.ap-stat {
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.ap-stat .ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.ap-stat .ico--brand {
+  background: var(--brand-50);
+  color: var(--brand);
+}
+.ap-stat .ico--green {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.ap-stat .ico--violet {
+  background: var(--violet-soft);
+  color: var(--violet);
+}
+.ap-stat .ico--amber {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.ap-stat .ico--blue {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+.ap-stat b {
+  display: block;
+  font-size: 24px;
+  font-weight: 780;
+  letter-spacing: -0.7px;
+  line-height: 1.15;
+}
+.ap-stat b i {
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 550;
+  color: var(--ink-400);
+  margin-left: 3px;
+}
+.ap-stat span {
+  font-size: 12px;
+  color: var(--ink-400);
+}

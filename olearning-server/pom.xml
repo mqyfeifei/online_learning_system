@@ -88,6 +88,19 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- Office 文档处理：课件预览解析（docx/pptx/xlsx）+ 作业/试卷导出 docx -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <!-- 旧版二进制格式 doc / xls / ppt 的解析 -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-scratchpad</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

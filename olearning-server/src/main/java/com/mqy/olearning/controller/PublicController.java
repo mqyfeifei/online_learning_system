@@ -4,10 +4,13 @@ import com.mqy.olearning.common.PageResult;
 import com.mqy.olearning.common.Result;
 import com.mqy.olearning.dto.CourseVO;
 import com.mqy.olearning.entity.CourseCategory;
+import com.mqy.olearning.entity.CourseResource;
 import com.mqy.olearning.entity.SysNotice;
 import com.mqy.olearning.security.UserContext;
 import com.mqy.olearning.service.CategoryService;
+import com.mqy.olearning.service.ChapterService;
 import com.mqy.olearning.service.CourseService;
+import com.mqy.olearning.service.CourseWorkService;
 import com.mqy.olearning.service.DiscussionService;
 import com.mqy.olearning.service.NoticeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +35,8 @@ public class PublicController {
     private final CategoryService categoryService;
     private final NoticeService noticeService;
     private final DiscussionService discussionService;
+    private final ChapterService chapterService;
+    private final CourseWorkService courseWorkService;
 
     @Operation(summary = "课程广场：分类筛选 + 关键词 + 热度/最新排序")
     @GetMapping("/courses")
@@ -47,6 +52,18 @@ public class PublicController {
     @GetMapping("/courses/{id}")
     public Result<Map<String, Object>> courseDetail(@PathVariable Long id) {
         return Result.ok(courseService.detail(id, UserContext.userId()));
+    }
+
+    @Operation(summary = "课程课件资料（游客可浏览，下载不需要选课）")
+    @GetMapping("/courses/{id}/resources")
+    public Result<List<CourseResource>> courseResources(@PathVariable Long id) {
+        return Result.ok(chapterService.resources(id, null));
+    }
+
+    @Operation(summary = "课程作业与测验汇总（含我的完成状态）")
+    @GetMapping("/courses/{id}/works")
+    public Result<Map<String, Object>> courseWorks(@PathVariable Long id) {
+        return Result.ok(courseWorkService.works(id, UserContext.userId()));
     }
 
     @Operation(summary = "分类树")

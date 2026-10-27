@@ -22,6 +22,14 @@ public class QuestionVO {
     private List<Map<String, String>> options;
     private Integer score;
 
+    /**
+     * 试卷题目关联表的主键，只有「教师看试卷题目」时才有值。
+     * 移除题目要按这个 id 删 paper_question，不能用题干 id（id 是 question.id）。
+     */
+    private Long paperQuestionId;
+
     private String answer;
+    /** 问答题参考答案（仅教师视角返回） */
+    private String referenceAnswer;
     private String analysis;
 }

@@ -1,172 +1,548 @@
 <template>
-  <div class="page-card">
-    <el-page-header content="章节与课件管理" @back="router.push('/teacher/courses')" style="margin-bottom: 16px" />
+  <div class="admin-page fade-up">
+    <div class="ap-head">
+      <div>
+        <h1>章节与课件</h1>
+        <p>{{ courseTitle }} · 共 {{ chapters.length }} 节，{{ resources.length }} 份课件</p>
+      </div>
+      <div class="ap-actions">
+        <el-button @click="router.push('/teacher/courses')">
+          <el-icon><ArrowLeft /></el-icon> 返回课程列表
+        </el-button>
+        <el-button type="primary" @click="openChapter(null)">
+          <el-icon><Plus /></el-icon> 新增章节
+        </el-button>
+      </div>
+    </div>
 
-    <el-row justify="space-between" align="middle" style="margin-bottom: 12px">
-      <el-tabs v-model="tab" style="flex: 1">
-        <el-tab-pane label="章节管理" name="chapter" />
-        <el-tab-pane label="课件资源" name="resource" />
-      </el-tabs>
-      <el-button type="primary" @click="tab === 'chapter' ? openChapter(null) : openResource()">
-        新增{{ tab === 'chapter' ? '章节' : '课件' }}
-      </el-button>
-    </el-row>
+    <div class="layout">
+      <!-- 左：章节列表 -->
+      <section class="ap-card side-list">
+        <div class="ap-card-head">
+          <h2>章节目录</h2>
+          <span class="ol-muted">{{ chapters.length }} 节</span>
+        </div>
+        <div class="chapters">
+          <div
+            v-for="(ch, i) in chapters"
+            :key="ch.id"
+            class="ch"
+            :class="{ active: current?.id === ch.id }"
+            @click="selectChapter(ch)"
+          >
+            <span class="ch-no">{{ i + 1 }}</span>
+            <div class="ch-text">
+              <b>{{ ch.title }}</b>
+              <span>{{ fileCount(ch.id) }} 份课件</span>
+            </div>
+            <el-icon class="ch-del" @click.stop="removeChapter(ch)">
+              <Delete />
+            </el-icon>
+          </div>
 
-    <template v-if="tab === 'chapter'">
-      <el-table :data="chapters" stripe>
-        <el-table-column prop="sort" label="排序" width="80" />
-        <el-table-column prop="title" label="章节标题" />
-        <el-table-column prop="content" label="内容摘要" show-overflow-tooltip />
-        <el-table-column label="操作" width="140">
-          <template #default="scope">
-            <el-button link type="primary" @click="openChapter(scope.row)">编辑</el-button>
-            <el-button link type="danger" @click="removeChapter(scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-empty v-if="chapters.length === 0" description="还没有章节" />
-    </template>
+          <div v-if="!chapters.length" class="ol-empty" style="padding: 30px 0">
+            还没有章节，先新增一节
+          </div>
+        </div>
+      </section>
 
-    <template v-else>
-      <el-table :data="resources" stripe>
-        <el-table-column prop="name" label="文件名" />
-        <el-table-column prop="fileType" label="类型" width="100" />
-        <el-table-column label="大小" width="120">
-          <template #default="scope">{{ (scope.row.fileSize / 1024 / 1024).toFixed(2) }} MB</template>
-        </el-table-column>
-        <el-table-column label="操作" width="160">
-          <template #default="scope">
-            <el-button link type="primary" @click="openUrl(scope.row.fileUrl)">查看</el-button>
-            <el-button link type="danger" @click="removeResource(scope.row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-empty v-if="resources.length === 0" description="还没有课件" />
-    </template>
+      <!-- 右：章节详情 + 课件 -->
+      <section v-if="current" class="ap-card detail">
+        <div class="ap-card-head">
+          <h2>{{ current.title }}</h2>
+          <el-button size="small" @click="openChapter(current)">编辑章节</el-button>
+        </div>
 
-    <el-dialog v-model="chapterDialog" :title="chapterForm.id ? '编辑章节' : '新增章节'" width="560px">
-      <el-form label-width="80px">
-        <el-form-item label="标题"><el-input v-model="chapterForm.title" /></el-form-item>
-        <el-form-item label="排序"><el-input-number v-model="chapterForm.sort" :min="1" /></el-form-item>
-        <el-form-item label="视频地址"><el-input v-model="chapterForm.videoUrl" placeholder="可选" /></el-form-item>
-        <el-form-item label="图文内容">
-          <el-input v-model="chapterForm.content" type="textarea" :rows="6" />
+        <div class="detail-body">
+          <div class="field">
+            <label>章节序号</label>
+            <b>{{ current.sort }}</b>
+          </div>
+          <div class="field">
+            <label>视频地址</label>
+            <span class="mono">{{ current.videoUrl || '未设置' }}</span>
+          </div>
+          <div class="field field--block">
+            <label>章节内容</label>
+            <p class="content">{{ current.content || '暂无图文内容' }}</p>
+          </div>
+        </div>
+
+        <!-- 课件 -->
+        <div class="files-head">
+          <h3>课件资料</h3>
+          <FileUploader
+            size="small"
+            :max-size="100"
+            accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.md,.txt,.zip,.mp4,.png,.jpg,.jpeg"
+            label="选择文件上传"
+            @uploaded="(d) => saveResource(d, current?.id)"
+          />
+        </div>
+
+        <div class="file-list">
+          <div v-for="f in currentFiles" :key="f.id" class="file">
+            <span class="fico" :class="`type-${(f.fileType || '').slice(0, 4)}`">
+              {{ (f.fileType || 'FILE').toUpperCase().slice(0, 4) }}
+            </span>
+            <div class="fbody">
+              <b>{{ f.name }}</b>
+              <span>{{ sizeText(f.fileSize) }}</span>
+            </div>
+            <button class="fop" @click="openPreview(f)">预览</button>
+            <button class="fop" @click="downloadFile(f)">下载</button>
+            <button class="fop danger" @click="removeFile(f)">删除</button>
+          </div>
+          <div v-if="!currentFiles.length" class="ol-empty" style="padding: 22px 0">
+            本节还没有课件
+          </div>
+        </div>
+
+        <!-- 课程级资料 -->
+        <div class="files-head">
+          <h3>课程级资料（不归属某一节）</h3>
+          <FileUploader
+            size="small"
+            :max-size="100"
+            accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.md,.txt,.zip,.mp4,.png,.jpg,.jpeg"
+            label="选择文件上传"
+            @uploaded="(d) => saveResource(d, null)"
+          />
+        </div>
+        <div class="file-list">
+          <div v-for="f in courseLevelFiles" :key="f.id" class="file">
+            <span class="fico" :class="`type-${(f.fileType || '').slice(0, 4)}`">
+              {{ (f.fileType || 'FILE').toUpperCase().slice(0, 4) }}
+            </span>
+            <div class="fbody">
+              <b>{{ f.name }}</b>
+              <span>{{ sizeText(f.fileSize) }}</span>
+            </div>
+            <button class="fop" @click="openPreview(f)">预览</button>
+            <button class="fop" @click="downloadFile(f)">下载</button>
+            <button class="fop danger" @click="removeFile(f)">删除</button>
+          </div>
+          <div v-if="!courseLevelFiles.length" class="ol-empty" style="padding: 22px 0">
+            暂无课程级资料
+          </div>
+        </div>
+      </section>
+
+      <section v-else class="ap-card empty-card">
+        <div class="ol-empty">
+          <span class="icon">📂</span>
+          左侧选择一节，查看与维护其内容
+        </div>
+      </section>
+    </div>
+
+    <!-- 课件预览 -->
+    <FilePreview v-model="previewVisible" :rid="previewRid" />
+
+    <!-- 章节编辑 -->
+    <el-dialog append-to-body v-model="dialog" :title="form.id ? '编辑章节' : '新增章节'" width="580px">
+      <el-form label-position="top">
+        <el-form-item label="章节标题">
+          <el-input v-model="form.title" maxlength="80" show-word-limit placeholder="例如：第 1 章 计算机网络概述" />
+        </el-form-item>
+        <div class="two">
+          <el-form-item label="排序序号">
+            <el-input-number v-model="form.sort" :min="1" :max="99" style="width: 100%" />
+          </el-form-item>
+          <el-form-item label="章节视频（可选）">
+            <div class="video-row">
+              <el-input v-model="form.videoUrl" placeholder="上传视频或粘贴 mp4 地址" />
+              <FileUploader
+                size="default"
+                accept="video/*"
+                label="选择视频"
+                :max-size="100"
+                @uploaded="(d) => (form.videoUrl = d.url)"
+              />
+            </div>
+          </el-form-item>
+        </div>
+        <el-form-item label="章节内容">
+          <el-input
+            v-model="form.content"
+            type="textarea"
+            :rows="6"
+            placeholder="本节的要点说明，支持换行分段"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="chapterDialog = false">取消</el-button>
+        <el-button @click="dialog = false">取消</el-button>
         <el-button type="primary" @click="saveChapter">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog v-model="resourceDialog" title="上传课件" width="520px">
-      <el-form label-width="80px">
-        <el-form-item label="文件">
-          <el-upload :http-request="doUpload" :limit="1" :on-success="onUploaded">
-            <el-button>选择文件</el-button>
-          </el-upload>
-          <div v-if="resourceForm.fileUrl" class="muted">已上传：{{ resourceForm.fileUrl }}</div>
-        </el-form-item>
-        <el-form-item label="显示名称">
-          <el-input v-model="resourceForm.name" />
-        </el-form-item>
-        <el-form-item label="所属章节">
-          <el-select v-model="resourceForm.chapterId" clearable placeholder="课程级资源可不选" style="width: 100%">
-            <el-option v-for="c in chapters" :key="c.id" :label="c.title" :value="c.id" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="resourceDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveResource">保存</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import FileUploader from '@/components/FileUploader.vue'
+import FilePreview from '@/components/FilePreview.vue'
+import { openFile } from '@/utils/file'
 
 const route = useRoute()
 const router = useRouter()
 const courseId = Number(route.params.courseId)
 
-const tab = ref('chapter')
+const courseTitle = ref('课程')
 const chapters = ref<any[]>([])
 const resources = ref<any[]>([])
+const current = ref<any>(null)
+const dialog = ref(false)
+const uploading = ref(false)
+const previewVisible = ref(false)
+const previewRid = ref<number | null>(null)
+const form = ref<any>({ id: null, title: '', sort: 1, videoUrl: '', content: '' })
 
-const chapterDialog = ref(false)
-const chapterForm = reactive<any>({ id: null, title: '', sort: 1, videoUrl: '', content: '' })
+const currentFiles = computed(() =>
+  resources.value.filter((r) => r.chapterId === current.value?.id)
+)
+const courseLevelFiles = computed(() => resources.value.filter((r) => !r.chapterId))
 
-const resourceDialog = ref(false)
-const resourceForm = reactive<any>({ name: '', fileUrl: '', fileType: '', fileSize: 0, chapterId: null })
+function fileCount(chapterId: number) {
+  return resources.value.filter((r) => r.chapterId === chapterId).length
+}
 
-function openUrl(url: string) {
-  window.open(url, '_blank')
+function sizeText(bytes: number) {
+  if (!bytes) return '未知大小'
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
 async function load() {
-  chapters.value = (await request.get('/api/teacher/courses/' + courseId + '/chapters')) as any
-  resources.value = (await request.get('/api/teacher/courses/' + courseId + '/resources')) as any
+  const courses: any = await request.get('/api/teacher/courses')
+  const target = (courses || []).find((c: any) => c.id === courseId)
+  courseTitle.value = target?.title || '课程'
+
+  chapters.value = ((await request.get(`/api/teacher/courses/${courseId}/chapters`)) as any) || []
+  resources.value = ((await request.get(`/api/teacher/courses/${courseId}/resources`)) as any) || []
+
+  // 保持当前选中项；首次进入默认选第一节
+  if (current.value) {
+    current.value = chapters.value.find((c) => c.id === current.value.id) || chapters.value[0] || null
+  } else {
+    current.value = chapters.value[0] || null
+  }
+}
+
+function selectChapter(ch: any) {
+  current.value = ch
 }
 
 function openChapter(row: any) {
-  Object.assign(chapterForm, row || { id: null, title: '', sort: chapters.value.length + 1, videoUrl: '', content: '' })
-  chapterDialog.value = true
+  form.value = row
+    ? {
+        id: row.id,
+        title: row.title,
+        sort: row.sort,
+        videoUrl: row.videoUrl || '',
+        content: row.content || ''
+      }
+    : {
+        id: null,
+        title: '',
+        sort: chapters.value.length + 1,
+        videoUrl: '',
+        content: ''
+      }
+  dialog.value = true
 }
 
 async function saveChapter() {
-  await request.post('/api/teacher/chapters', { ...chapterForm, courseId })
+  if (!form.value.title.trim()) {
+    ElMessage.warning('章节标题不能为空')
+    return
+  }
+  await request.post('/api/teacher/chapters', { ...form.value, courseId })
   ElMessage.success('已保存')
-  chapterDialog.value = false
+  dialog.value = false
   load()
 }
 
-async function removeChapter(row: any) {
-  await ElMessageBox.confirm('删除章节会同时删除其课件与学习记录，确认？', '提示', { type: 'warning' })
-  await request.delete('/api/teacher/chapters/' + row.id)
-  ElMessage.success('已删除')
-  load()
-}
-
-function openResource() {
-  Object.assign(resourceForm, { name: '', fileUrl: '', fileType: '', fileSize: 0, chapterId: null })
-  resourceDialog.value = true
-}
-
-async function doUpload(options: any) {
-  const fd = new FormData()
-  fd.append('file', options.file)
-  const data: any = await request.post('/api/files/upload', fd)
-  options.onSuccess(data)
-}
-
-function onUploaded(data: any) {
-  resourceForm.fileUrl = data.url
-  resourceForm.fileType = data.type
-  resourceForm.fileSize = data.size
-  resourceForm.name = data.name
-  ElMessage.success('上传成功')
-}
-
-async function saveResource() {
-  await request.post('/api/teacher/resources', {
-    courseId, chapterId: resourceForm.chapterId, name: resourceForm.name,
-    fileUrl: resourceForm.fileUrl, fileType: resourceForm.fileType, fileSize: resourceForm.fileSize
+async function removeChapter(ch: any) {
+  await ElMessageBox.confirm(`删除章节《${ch.title}》？该章节的课件也会一起删除。`, '提示', {
+    type: 'warning'
   })
-  ElMessage.success('已保存')
-  resourceDialog.value = false
+  await request.delete(`/api/teacher/chapters/${ch.id}`)
+  ElMessage.success('已删除')
+  if (current.value?.id === ch.id) current.value = null
   load()
 }
 
-async function removeResource(row: any) {
-  await request.delete('/api/teacher/resources/' + row.id)
+/** 上传成功后落库：chapterId 为空表示课程级资料 */
+async function saveResource(data: any, chapterId: number | null) {
+  const ext = (data.name.split('.').pop() || '').toLowerCase()
+  await request.post('/api/teacher/resources', {
+    courseId,
+    chapterId: chapterId || null,
+    name: data.name,
+    fileUrl: data.url,
+    fileType: ext,
+    fileSize: data.size
+  })
+  resources.value = ((await request.get(`/api/teacher/courses/${courseId}/resources`)) as any) || []
+}
+
+function downloadFile(f: any) {
+  openFile(`/api/public/files/download?rid=${f.id}`)
+}
+
+function openPreview(f: any) {
+  previewRid.value = f.id
+  previewVisible.value = true
+}
+
+async function removeFile(f: any) {
+  await ElMessageBox.confirm(`删除课件《${f.name}》？`, '提示', { type: 'warning' })
+  await request.delete(`/api/teacher/resources/${f.id}`)
   ElMessage.success('已删除')
-  load()
+  resources.value = ((await request.get(`/api/teacher/courses/${courseId}/resources`)) as any) || []
 }
 
 onMounted(load)
 </script>
+
+<style scoped>
+.layout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* ---------- 左列表 ---------- */
+.chapters {
+  padding: 8px;
+  max-height: 640px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: all 0.16s;
+  border: 1px solid transparent;
+}
+.ch:hover {
+  background: var(--surface-sunken);
+}
+.ch.active {
+  background: var(--brand-50);
+  border-color: var(--brand-100);
+}
+.ch-no {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--surface-sunken);
+  color: var(--ink-400);
+}
+.ch.active .ch-no {
+  background: var(--brand);
+  color: #fff;
+}
+.ch-text {
+  flex: 1;
+  min-width: 0;
+}
+.ch-text b {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ch-text span {
+  font-size: 11px;
+  color: var(--ink-400);
+}
+.ch-del {
+  color: var(--ink-300);
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.16s;
+}
+.ch:hover .ch-del {
+  opacity: 1;
+}
+.ch-del:hover {
+  color: #c0392b;
+}
+
+/* ---------- 右详情 ---------- */
+.detail-body {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px 20px;
+}
+.field label {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ink-400);
+  margin-bottom: 3px;
+}
+.field b {
+  font-size: 13.5px;
+  font-weight: 650;
+}
+.mono {
+  font-size: 12.5px;
+  color: var(--ink-500);
+  word-break: break-all;
+}
+.field--block {
+  grid-column: 1 / -1;
+}
+.content {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.85;
+  color: var(--ink-700);
+  white-space: pre-wrap;
+  background: var(--surface-sunken);
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+}
+
+.files-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px 6px;
+  border-top: 1px solid var(--ink-100);
+}
+.files-head h3 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 680;
+}
+.file-list {
+  padding: 4px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.file {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-sm);
+  transition: border-color 0.16s;
+}
+.file:hover {
+  border-color: var(--brand-200);
+}
+.fico {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  font-weight: 750;
+  background: var(--surface-sunken);
+  color: var(--ink-500);
+}
+.type-pptx,
+.type-ppt {
+  background: #fff0e8;
+  color: #d2691e;
+}
+.type-pdf {
+  background: #ffeaea;
+  color: #c9302c;
+}
+.type-docx,
+.type-doc {
+  background: var(--blue-soft);
+  color: #2b6cb0;
+}
+.type-md {
+  background: var(--violet-soft);
+  color: #5a4bcf;
+}
+.fbody {
+  flex: 1;
+  min-width: 0;
+}
+.fbody b {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fbody span {
+  font-size: 11px;
+  color: var(--ink-400);
+}
+.fop {
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 550;
+  font-family: var(--font);
+  cursor: pointer;
+  padding: 2px 6px;
+  flex: none;
+}
+.fop.danger {
+  color: var(--ink-400);
+}
+.fop.danger:hover {
+  color: #c0392b;
+}
+
+.empty-card {
+  min-height: 300px;
+  display: grid;
+  place-items: center;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+}
+.video-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  align-items: center;
+}
+.video-row :deep(.el-input) {
+  flex: 1;
+}
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

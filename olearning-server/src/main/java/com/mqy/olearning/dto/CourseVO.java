@@ -15,6 +15,10 @@ public class CourseVO extends Course {
     private Integer studentCount;
     /** 当前用户是否已选 */
     private Boolean enrolled;
+    /** 当前用户选课状态：0 退课 / 1 在读 / 2 待审核 / 3 已拒绝；未选课时为 null */
+    private Integer enrollStatus;
     /** 当前用户的学习进度百分比 0-100 */
     private Integer progress;
+    /** 待审核的选课申请数（教师端展示用） */
+    private Integer pendingApplyCount;
 }
