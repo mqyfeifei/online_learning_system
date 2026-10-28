@@ -1,6 +1,7 @@
 package com.mqy.olearning.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -15,6 +16,8 @@ public class Assignment {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long courseId;
+    /** 可空：挂到某一章节，空表示整门课 */
+    private Long chapterId;
     private String title;
     /** 作业要求（列名 requirement，避开 SQL 保留字 require） */
     private String requirement;
@@ -23,4 +26,8 @@ public class Assignment {
     private LocalDateTime startTime;
     private LocalDateTime deadline;
     private LocalDateTime createTime;
+
+    /** 所属章节标题（非表列） */
+    @TableField(exist = false)
+    private String chapterTitle;
 }

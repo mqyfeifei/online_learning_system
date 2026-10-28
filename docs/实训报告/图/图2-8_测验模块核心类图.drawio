@@ -1,0 +1,249 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n109" name="页面-1">
+    <mxGraphModel dx="2352" dy="999" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1320" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cls_svc" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=15;" value="ExamService（测验业务门面）" vertex="1">
+          <mxGeometry height="387" width="400" x="340" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr0" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- TYPE_SINGLE=1~TYPE_ESSAY=5 常量" vertex="1">
+          <mxGeometry height="22" width="400" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr1" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ questions(courseId): List" vertex="1">
+          <mxGeometry height="22" width="400" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr2" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ saveQuestion(q, teacherId) / removeQuestion()" vertex="1">
+          <mxGeometry height="22" width="400" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr3" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ papers(courseId) / publishedPapers()" vertex="1">
+          <mxGeometry height="22" width="400" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr4" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ savePaper(paper, teacherId): Long" vertex="1">
+          <mxGeometry height="22" width="400" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr5" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ publishPaper(paperId, teacherId)  // 版本+1" vertex="1">
+          <mxGeometry height="22" width="400" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr6" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ addQuestion() / removePaperQuestion()" vertex="1">
+          <mxGeometry height="22" width="400" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr7" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ updatePaperQuestionScore()" vertex="1">
+          <mxGeometry height="22" width="400" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr8" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ paperQuestions(paperId, withAnswer)" vertex="1">
+          <mxGeometry height="22" width="400" y="202" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr9" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ startExam(paperId, userId): Map" vertex="1">
+          <mxGeometry height="22" width="400" y="224" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr10" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ submit(userId, dto): ExamResultVO" vertex="1">
+          <mxGeometry height="22" width="400" y="246" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr11" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ myRecords() / recordDetail() / paperRecords()" vertex="1">
+          <mxGeometry height="22" width="400" y="268" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr12" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- isCorrect(q, your): boolean" vertex="1">
+          <mxGeometry height="22" width="400" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr13" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- matchBlank(expected, actual): boolean" vertex="1">
+          <mxGeometry height="22" width="400" y="312" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr14" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- checkWindow(paper)  // 时间窗兜底" vertex="1">
+          <mxGeometry height="22" width="400" y="334" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_svcr15" parent="cls_svc" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- latestRecord(paperId, userId, version)" vertex="1">
+          <mxGeometry height="22" width="400" y="356" as="geometry" />
+        </mxCell>
+        <mxCell id="stereo_svc" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;fontStyle=1;" value="«Service»  @Transactional 事务边界：submit / publishPaper" vertex="1">
+          <mxGeometry height="24" width="400" x="340" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paper" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#6c8ebf;fontSize=15;" value="ExamPaper 试卷" vertex="1">
+          <mxGeometry height="202" width="260" x="-162" y="131" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr0" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- id: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr1" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- courseId: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr2" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- title: String" vertex="1">
+          <mxGeometry height="22" width="260" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr3" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- totalScore / passScore: Integer" vertex="1">
+          <mxGeometry height="22" width="260" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr4" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- duration: Integer（分钟）" vertex="1">
+          <mxGeometry height="22" width="260" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr5" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- publishStatus: Integer" vertex="1">
+          <mxGeometry height="22" width="260" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr6" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- version: Integer（发布版本）" vertex="1">
+          <mxGeometry height="22" width="260" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_paperr7" parent="cls_paper" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- startTime / endTime: LocalDateTime" vertex="1">
+          <mxGeometry height="22" width="260" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_q" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#6c8ebf;fontSize=15;" value="Question 题目" vertex="1">
+          <mxGeometry height="224" width="260" x="410" y="519" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr0" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- id: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr1" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- courseId: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr2" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- type: Integer（1~5）" vertex="1">
+          <mxGeometry height="22" width="260" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr3" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- title: String" vertex="1">
+          <mxGeometry height="22" width="260" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr4" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- optionsJson: String" vertex="1">
+          <mxGeometry height="22" width="260" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr5" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- answer: String（判分依据）" vertex="1">
+          <mxGeometry height="22" width="260" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr6" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- referenceAnswer: String" vertex="1">
+          <mxGeometry height="22" width="260" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr7" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- analysis: String" vertex="1">
+          <mxGeometry height="22" width="260" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_qr8" parent="cls_q" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- difficulty: Integer" vertex="1">
+          <mxGeometry height="22" width="260" y="202" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_pq" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#6c8ebf;fontSize=15;" value="PaperQuestion 试卷题目关联" vertex="1">
+          <mxGeometry height="136" width="260" x="32" y="563" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_pqr0" parent="cls_pq" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- id: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_pqr1" parent="cls_pq" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- paperId: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_pqr2" parent="cls_pq" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- questionId: Long" vertex="1">
+          <mxGeometry height="22" width="260" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_pqr3" parent="cls_pq" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- score: Integer（本题分值）" vertex="1">
+          <mxGeometry height="22" width="260" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_pqr4" parent="cls_pq" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- sort: Integer" vertex="1">
+          <mxGeometry height="22" width="260" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_rec" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#6c8ebf;fontSize=15;" value="ExamRecord 考试记录" vertex="1">
+          <mxGeometry height="224" width="270" x="-299" y="563" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr0" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- id: Long" vertex="1">
+          <mxGeometry height="22" width="270" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr1" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- paperId / paperVersion" vertex="1">
+          <mxGeometry height="22" width="270" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr2" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- userId: Long" vertex="1">
+          <mxGeometry height="22" width="270" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr3" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- answersJson: String（作答快照）" vertex="1">
+          <mxGeometry height="22" width="270" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr4" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- objectiveScore / subjectiveScore" vertex="1">
+          <mxGeometry height="22" width="270" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr5" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- score: Integer" vertex="1">
+          <mxGeometry height="22" width="270" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr6" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- markStatus: Integer（0/1/2）" vertex="1">
+          <mxGeometry height="22" width="270" y="158" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr7" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- passed: Integer" vertex="1">
+          <mxGeometry height="22" width="270" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_recr8" parent="cls_rec" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- startTime / submitTime" vertex="1">
+          <mxGeometry height="22" width="270" y="202" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_mark" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#6c8ebf;fontSize=15;" value="ExamMark 批阅明细" vertex="1">
+          <mxGeometry height="136" width="270" x="760" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_markr0" parent="cls_mark" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- id: Long" vertex="1">
+          <mxGeometry height="22" width="270" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_markr1" parent="cls_mark" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- recordId / questionId: Long" vertex="1">
+          <mxGeometry height="22" width="270" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_markr2" parent="cls_mark" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- score: Integer（逐题给分）" vertex="1">
+          <mxGeometry height="22" width="270" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_markr3" parent="cls_mark" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- comment: String（评语）" vertex="1">
+          <mxGeometry height="22" width="270" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_markr4" parent="cls_mark" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="- teacherId: Long" vertex="1">
+          <mxGeometry height="22" width="270" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_dto" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#6c8ebf;fontSize=15;" value="ExamSubmitDTO 交卷参数" vertex="1">
+          <mxGeometry height="92" width="230" x="901" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_dtor0" parent="cls_dto" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ paperId: Long" vertex="1">
+          <mxGeometry height="22" width="230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_dtor1" parent="cls_dto" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ answers: Map" vertex="1">
+          <mxGeometry height="22" width="230" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_dtor2" parent="cls_dto" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="（题目ID → 作答，如 {&quot;9&quot;:&quot;T&quot;}）" vertex="1">
+          <mxGeometry height="22" width="230" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vo" parent="1" style="swimlane;fontStyle=1;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#6c8ebf;fontSize=15;" value="ExamResultVO 判分结果" vertex="1">
+          <mxGeometry height="158" width="230" x="894" y="308" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vor0" parent="cls_vo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ recordId / score" vertex="1">
+          <mxGeometry height="22" width="230" y="26" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vor1" parent="cls_vo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ objectiveScore / subjectiveScore" vertex="1">
+          <mxGeometry height="22" width="230" y="48" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vor2" parent="cls_vo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ markStatus / passed" vertex="1">
+          <mxGeometry height="22" width="230" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vor3" parent="cls_vo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="+ details: List" vertex="1">
+          <mxGeometry height="22" width="230" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vor4" parent="cls_vo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="AnswerDetail：题目、我的答案、" vertex="1">
+          <mxGeometry height="22" width="230" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="cls_vor5" parent="cls_vo" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;whiteSpace=wrap;html=1;fontSize=15;" value="正确答案、解析、得分、needManual" vertex="1">
+          <mxGeometry height="22" width="230" y="136" as="geometry" />
+        </mxCell>
+        <mxCell id="n101" edge="1" parent="1" source="cls_svc" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_paper" value="查询 / 组卷 / 发布">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n102" edge="1" parent="1" source="cls_svc" style="rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_q" value="题库维护">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n103" edge="1" parent="1" source="cls_paper" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_pq" value="1      n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n104" edge="1" parent="1" source="cls_pq" style="rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_q" value="n      1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n105" edge="1" parent="1" source="cls_paper" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_rec" value="1      n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n106" edge="1" parent="1" source="cls_recr8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="cls_mark" value="1      n">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-164" y="807" />
+              <mxPoint x="895" y="807" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n107" edge="1" parent="1" source="cls_svc" style="rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_dto" value="submit 入参">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n108" edge="1" parent="1" source="cls_svc" style="rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=15;" target="cls_vo" value="submit 返回">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

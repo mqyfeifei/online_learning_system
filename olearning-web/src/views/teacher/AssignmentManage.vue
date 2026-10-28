@@ -22,6 +22,9 @@
           <span class="hw-ico"><el-icon><Document /></el-icon></span>
           <div class="hw-title">
             <b>{{ item.assignment.title }}</b>
+            <span v-if="item.assignment.chapterTitle" class="chip chip--blue">
+              {{ item.assignment.chapterTitle }}
+            </span>
             <span class="chip" :class="deadlineClass(item.assignment.deadline)">
               {{ deadlineText(item.assignment.deadline) }}
             </span>
@@ -72,6 +75,17 @@
             :rows="6"
             placeholder="写清要交什么、格式要求、评分侧重"
           />
+        </el-form-item>
+        <el-form-item label="归属章节（可选）">
+          <el-select
+            v-model="form.chapterId"
+            placeholder="不选表示整门课的作业"
+            clearable
+            style="width: 100%"
+          >
+            <el-option v-for="c in chapters" :key="c.id" :label="c.title" :value="c.id" />
+          </el-select>
+          <span class="tip">挂到章节上，学生在该章节里就能直接看到这次作业</span>
         </el-form-item>
         <div class="time-row">
           <el-form-item label="开始时间（可选）">
@@ -232,7 +246,15 @@ const dialog = ref(false)
 const drawer = ref(false)
 const gradeDialog = ref(false)
 
-const form = ref<any>({ id: null, title: '', requirement: '', startTime: null, deadline: null })
+const form = ref<any>({
+  id: null,
+  title: '',
+  requirement: '',
+  chapterId: null,
+  startTime: null,
+  deadline: null
+})
+const chapters = ref<any[]>([])
 const submissions = ref<any[]>([])
 const currentAssignment = ref<any>({})
 const grading = ref<any>(null)
@@ -276,6 +298,7 @@ async function load() {
   const target = (courses || []).find((c: any) => c.id === courseId)
   courseTitle.value = target?.title || '课程'
   list.value = ((await request.get(`/api/teacher/courses/${courseId}/assignments`)) as any) || []
+  chapters.value = ((await request.get(`/api/teacher/courses/${courseId}/chapters`)) as any) || []
 }
 
 function openEdit(row: any) {
@@ -284,11 +307,20 @@ function openEdit(row: any) {
         id: row.id,
         title: row.title,
         requirement: row.requirement || '',
+        chapterId: row.chapterId || null,
         startTime: row.startTime || null,
         deadline: row.deadline,
         attachUrl: row.attachUrl || ''
       }
-    : { id: null, title: '', requirement: '', startTime: null, deadline: null, attachUrl: '' }
+    : {
+        id: null,
+        title: '',
+        requirement: '',
+        chapterId: null,
+        startTime: null,
+        deadline: null,
+        attachUrl: ''
+      }
   dialog.value = true
 }
 
@@ -561,6 +593,16 @@ onMounted(load)
   margin: -8px 0 14px;
   font-size: 11.5px;
   color: var(--ink-300);
+}
+.time-tip b {
+  color: var(--brand);
+}
+.tip {
+  font-size: 11.5px;
+  color: var(--ink-300);
+  line-height: 1.6;
+  display: block;
+  margin-top: 3px;
 }
 .att-link {
   cursor: pointer;

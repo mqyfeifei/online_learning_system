@@ -22,7 +22,7 @@
           </div>
         </div>
 
-        <h2>{{ result.passed ? '测验通过 🎉' : '这次没过，再练一遍' }}</h2>
+        <h2>{{ result.passed ? '测验通过 🎉' : '这次没过，复习一遍吧' }}</h2>
         <p class="rs-tip">
           共 {{ result.details?.length || 0 }} 题，答对 {{ correctCount }} 题，及格线 {{ result.passScore }} 分
         </p>
@@ -32,13 +32,15 @@
         </div>
 
         <div class="rs-actions">
-          <el-button type="primary" size="large" @click="router.push('/grades')">
+          <el-button type="primary" size="large" @click="goGrades">
             查看我的成绩
           </el-button>
           <el-button size="large" @click="openWorkNote">
             <el-icon><Notebook /></el-icon> 测验笔记
           </el-button>
-          <el-button size="large" @click="router.back()">返回课程</el-button>
+          <el-button size="large" @click="close">
+            {{ embedded ? '关闭' : '返回课程' }}
+          </el-button>
         </div>
       </section>
 
@@ -308,6 +310,40 @@ import RichEditor from '@/components/RichEditor.vue'
 const route = useRoute()
 const router = useRouter()
 
+/**
+ * 两种用法：
+ * - 路由页 /exam/:paperId（embedded=false）
+ * - 被课程详情页以全屏弹窗嵌进来（embedded=true，paperId 由 props 传）
+ * 课程详情里点「去测验」走后者，避免弹窗背后跳到别的页面。
+ */
+const props = withDefaults(
+  defineProps<{
+    paperId?: string | number
+    embedded?: boolean
+  }>(),
+  { paperId: undefined, embedded: false }
+)
+const emit = defineEmits<{ (e: 'close'): void }>()
+
+const pid = computed(() => (props.paperId != null ? props.paperId : route.params.paperId))
+const embedded = computed(() => props.embedded)
+
+/** 关闭：嵌在弹窗里时通知父组件收起弹窗，独立页面时退回上一页 */
+function close() {
+  if (embedded.value) {
+    emit('close')
+  } else {
+    close()
+  }
+}
+
+function goGrades() {
+  if (embedded.value) {
+    emit('close')
+  }
+  router.push('/grades')
+}
+
 const loading = ref(false)
 const submitting = ref(false)
 const paper = ref<any>({})
@@ -397,7 +433,7 @@ async function load() {
   try {
     let data: any
     try {
-      data = await request.get(`/api/papers/${route.params.paperId}/start`)
+      data = await request.get(`/api/papers/${pid.value}/start`)
     } catch (e: any) {
       // 已交过卷 / 未到时间 / 已结束：能拿到成绩就直接展示成绩，否则留在提示页
       await showRecordIfAny()
@@ -428,11 +464,11 @@ async function showRecordIfAny() {
   try {
     const records: any = await request.get('/api/my/records')
     const hit = (records || []).find(
-      (r: any) => Number(r.record?.paperId) === Number(route.params.paperId)
+      (r: any) => Number(r.record?.paperId) === Number(pid.value)
     )
     if (!hit) {
       ElMessage.warning('该测验当前不可作答')
-      router.back()
+      close()
       return
     }
     result.value = await request.get(`/api/records/${hit.record.id}`)
@@ -440,7 +476,7 @@ async function showRecordIfAny() {
     if (hit.courseId) paper.value = { ...paper.value, courseId: hit.courseId }
     if (hit.paperTitle) paper.value = { ...paper.value, title: hit.paperTitle }
   } catch {
-    router.back()
+    close()
   }
 }
 
@@ -494,7 +530,7 @@ async function leave() {
     })
     saveDraft()
     if (timer) window.clearInterval(timer)
-    router.back()
+    close()
   } catch {
     /* 取消就继续答题 */
   }
@@ -504,7 +540,7 @@ async function leave() {
 const draftTip = ref('')
 
 function draftKey() {
-  return `ol-draft:exam:${route.params.paperId}`
+  return `ol-draft:exam:${pid.value}`
 }
 
 /** 一个字都没填过就不必存草稿，免得答题卡一直提示「草稿已保存」 */
@@ -580,7 +616,7 @@ async function openWorkNote() {
     const list: any = await request.get('/api/my/notes')
     const hit = (list || []).find(
       (n: any) =>
-        n.refType === 'EXAM' && n.refId === Number(route.params.paperId)
+        n.refType === 'EXAM' && n.refId === Number(pid.value)
     )
     if (hit) {
       workNote.value.content = hit.content
@@ -601,7 +637,7 @@ async function saveWorkNote() {
     id: workNote.value.existingId,
     courseId: paper.value.courseId,
     refType: 'EXAM',
-    refId: Number(route.params.paperId),
+    refId: Number(pid.value),
     title: '',
     content: workNote.value.content
   })

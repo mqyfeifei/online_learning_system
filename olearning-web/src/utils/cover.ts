@@ -33,6 +33,22 @@ export function coverOf(id: unknown): string {
   return COVER_PALETTE[i]
 }
 
+/**
+ * 课程封面样式：教师上传过封面就用封面图，没有才退回 id 取色的渐变。
+ * 各页面统一走这个函数，避免「教师端设了封面、学生端还是色块」。
+ */
+export function coverStyle(course: any): Record<string, string> {
+  const cover = course?.cover
+  if (!cover) {
+    return { background: coverOf(course?.id) }
+  }
+  return {
+    backgroundImage: `url("${cover}")`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center'
+  }
+}
+
 /** 头像底色；按用户 id 取，保证同一个人到处一个色 */
 export function avatarColor(seed: unknown): string {
   const n = Number(seed)

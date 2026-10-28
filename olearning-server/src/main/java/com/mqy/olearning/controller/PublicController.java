@@ -84,18 +84,24 @@ public class PublicController {
         return Result.ok(noticeService.list());
     }
 
-    @Operation(summary = "讨论帖列表")
+    @Operation(summary = "讨论帖列表：可按课程标签筛选")
     @GetMapping("/discussions")
     public Result<PageResult<Map<String, Object>>> discussions(@RequestParam(required = false) Long courseId,
                                                               @RequestParam(required = false) String keyword,
                                                               @RequestParam(defaultValue = "1") long current,
                                                               @RequestParam(defaultValue = "10") long size) {
-        return Result.ok(discussionService.posts(courseId, keyword, current, size));
+        return Result.ok(discussionService.posts(courseId, keyword, UserContext.userId(), current, size));
+    }
+
+    @Operation(summary = "讨论区课程标签：只列出有帖子的课程，带帖子数")
+    @GetMapping("/discussions/courses")
+    public Result<List<Map<String, Object>>> discussionCourses() {
+        return Result.ok(discussionService.courseOptions());
     }
 
     @Operation(summary = "帖子详情 + 回复列表")
     @GetMapping("/discussions/{id}")
     public Result<Map<String, Object>> discussionDetail(@PathVariable Long id) {
-        return Result.ok(discussionService.detail(id));
+        return Result.ok(discussionService.detail(id, UserContext.userId()));
     }
 }

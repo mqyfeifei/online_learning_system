@@ -20,13 +20,31 @@
 
     <!-- 试卷卡片 -->
     <div class="paper-grid">
-      <article v-for="p in papers" :key="p.id" class="paper">
+      <article v-for="p in papers" :key="p.id" class="paper" :class="{ unpublished: p.publishStatus !== 1 }">
         <div class="p-head">
           <span class="p-ico"><el-icon><Document /></el-icon></span>
           <div class="p-title">
             <b>{{ p.title }}</b>
-            <span>限时 {{ p.duration }} 分钟</span>
+            <span>限时 {{ p.duration }} 分钟<template v-if="p.chapterTitle"> · {{ p.chapterTitle }}</template></span>
           </div>
+          <span class="pub-chip" :class="p.publishStatus === 1 ? 'pub-chip--on' : 'pub-chip--off'">
+            {{ p.publishStatus === 1 ? `已发布 v${p.version || 1}` : '未发布' }}
+          </span>
+        </div>
+
+        <!-- 组卷进度：题目分值必须凑够试卷总分才能发布 -->
+        <div class="p-score" :class="{ ok: p.questionScore === p.totalScore, bad: p.questionScore !== p.totalScore }">
+          <div class="ps-bar">
+            <i :style="{ width: Math.min(100, ((p.questionScore || 0) / (p.totalScore || 100)) * 100) + '%' }" />
+          </div>
+          <span>
+            题目 {{ p.questionCount || 0 }} 题 · 分值合计
+            <b>{{ p.questionScore || 0 }}</b> / {{ p.totalScore }} 分
+          </span>
+          <span v-if="p.questionScore !== p.totalScore" class="ps-tip">
+            分值合计与总分不一致，不能发布
+          </span>
+          <span v-else-if="p.publishStatus !== 1" class="ps-tip ps-tip--ok">已满足发布条件</span>
         </div>
 
         <div class="p-time">
@@ -54,7 +72,15 @@
         </div>
 
         <div class="p-ops">
-          <el-button type="primary" size="small" @click="openCompose(p)">
+          <el-button
+            type="primary"
+            size="small"
+            :disabled="p.questionScore !== p.totalScore"
+            @click="publish(p)"
+          >
+            {{ p.publishStatus === 1 ? '重新发布' : '发布试卷' }}
+          </el-button>
+          <el-button size="small" @click="openCompose(p)">
             组卷 / 调分
           </el-button>
           <el-button size="small" @click="openRecords(p)">
@@ -99,6 +125,16 @@
             <el-input-number v-model="form.duration" :min="5" :max="180" style="width: 100%" />
           </el-form-item>
         </div>
+        <el-form-item label="归属章节（可选）">
+          <el-select
+            v-model="form.chapterId"
+            placeholder="不选表示整门课的测验"
+            clearable
+            style="width: 100%"
+          >
+            <el-option v-for="c in chapters" :key="c.id" :label="c.title" :value="c.id" />
+          </el-select>
+        </el-form-item>
         <div class="two-time">
           <el-form-item label="开始时间（可选）">
             <el-date-picker
@@ -119,7 +155,11 @@
             />
           </el-form-item>
         </div>
-        <p class="time-tip">学生只能在「开始时间 ~ 结束时间」之间作答，每张试卷只能考一次</p>
+        <p class="time-tip">
+          学生只能在「开始时间 ~ 结束时间」之间作答，每张试卷只能考一次。
+          试卷保存后默认是<b>未发布</b>状态，学生看不到；题目分值合计等于总分后才能发布，
+          重新编辑后需要再发布一次。
+        </p>
       </el-form>
       <template #footer>
         <el-button @click="dialog = false">取消</el-button>
@@ -139,7 +179,7 @@
               / {{ currentPaper.totalScore || 100 }} 分
             </p>
           </div>
-          <el-button @click="drawer = false">完成</el-button>
+          <el-button @click="closeCompose">完成</el-button>
         </div>
 
         <div class="c-body">
@@ -241,7 +281,7 @@
             <span class="ol-muted"> / {{ row.totalScore }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="120">
+        <el-table-column label="状态" width="180">
           <template #default="{ row }">
             <span
               class="chip"
@@ -249,6 +289,7 @@
             >
               {{ markText(row.record.markStatus) }}
             </span>
+            <span v-if="row.current === false" class="chip chip--amber">历史版本</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" align="right">
@@ -346,12 +387,20 @@ const courseTitle = ref('课程')
 const papers = ref<any[]>([])
 const questions = ref<any[]>([])
 const dialog = ref(false)
-const form = ref<any>({ id: null, title: '', totalScore: 100, passScore: 60, duration: 30 })
+const form = ref<any>({
+  id: null,
+  title: '',
+  chapterId: null,
+  totalScore: 100,
+  passScore: 60,
+  duration: 30
+})
 
 const drawer = ref(false)
 const currentPaper = ref<any>({})
 const paperQuestions = ref<any[]>([])
 const qKeyword = ref('')
+const chapters = ref<any[]>([])
 
 /** 时间展示：2026-10-27 14:30 */
 function fmt(t: string) {
@@ -455,6 +504,30 @@ async function load() {
 
   papers.value = ((await request.get(`/api/teacher/courses/${courseId}/papers`)) as any) || []
   questions.value = ((await request.get(`/api/teacher/courses/${courseId}/questions`)) as any) || []
+  chapters.value = ((await request.get(`/api/teacher/courses/${courseId}/chapters`)) as any) || []
+}
+
+/**
+ * 发布 / 重新发布。
+ * 重新发布会让版本号 +1，学生已提交的答卷变成「历史作答、需要重做」，
+ * 但原作答内容仍然保留，教师还能在批阅列表里看到。
+ */
+async function publish(row: any) {
+  if ((row.questionScore || 0) !== row.totalScore) {
+    ElMessage.warning(`题目分值合计 ${row.questionScore || 0} 分，与试卷总分 ${row.totalScore} 分不一致`)
+    return
+  }
+  const again = row.publishStatus === 1
+  if (again) {
+    await ElMessageBox.confirm(
+      '重新发布后版本号 +1，学生已完成的答卷会变成「需要重新作答」，原有作答记录仍然保留。确认重新发布？',
+      '重新发布试卷',
+      { type: 'warning', confirmButtonText: '确认重新发布', cancelButtonText: '再想想' }
+    )
+  }
+  await request.post(`/api/teacher/papers/${row.id}/publish`)
+  ElMessage.success(again ? '已重新发布，学生需要重新作答' : '试卷已发布，学生现在可以作答了')
+  load()
 }
 
 function openEdit(row: any) {
@@ -462,6 +535,7 @@ function openEdit(row: any) {
     ? {
         id: row.id,
         title: row.title,
+        chapterId: row.chapterId || null,
         totalScore: row.totalScore,
         passScore: row.passScore,
         duration: row.duration,
@@ -471,6 +545,7 @@ function openEdit(row: any) {
     : {
         id: null,
         title: '',
+        chapterId: null,
         totalScore: 100,
         passScore: 60,
         duration: 30,
@@ -494,7 +569,9 @@ async function save() {
     return
   }
   await request.post('/api/teacher/papers', { ...form.value, courseId })
-  ElMessage.success('已保存')
+  ElMessage.success(
+    form.value.id ? '已保存，试卷需要重新发布后学生才能看到' : '已创建，组好卷后记得发布试卷'
+  )
   dialog.value = false
   load()
 }
@@ -513,6 +590,12 @@ async function openCompose(row: any) {
   qKeyword.value = ''
   await loadPaperQuestions()
   drawer.value = true
+}
+
+/** 组卷改过题目后试卷会打回未发布，关抽屉时刷新列表让状态同步 */
+async function closeCompose() {
+  drawer.value = false
+  await load()
 }
 
 async function loadPaperQuestions() {
@@ -543,12 +626,10 @@ async function removeFromPaper(q: any) {
  */
 async function updateScore(q: any, value: number) {
   if (!value) return
-  await request.delete(`/api/teacher/paper-questions/${q.paperQuestionId}`)
-  await request.post(`/api/teacher/papers/${currentPaper.value.id}/questions`, {
-    questionId: q.id,
-    score: value
-  })
+  // 后端有专用改分接口，不用再「删了重新加」；改完试卷会打回未发布，需重新发布
+  await request.put(`/api/teacher/paper-questions/${q.paperQuestionId}/score`, { score: value })
   await loadPaperQuestions()
+  await load()
 }
 
 onMounted(load)
@@ -570,6 +651,58 @@ onMounted(load)
 .paper:hover {
   border-color: var(--brand-200);
   box-shadow: var(--sh-sm);
+}
+/* 未发布的试卷学生看不到，用虚线边框区分 */
+.paper.unpublished {
+  border-style: dashed;
+  border-color: var(--amber, #e0a11b);
+}
+.pub-chip {
+  margin-left: auto;
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+}
+.pub-chip--on {
+  background: var(--green-soft);
+  color: var(--green);
+}
+.pub-chip--off {
+  background: var(--amber-soft, #fdf2df);
+  color: #a86a08;
+}
+.p-score {
+  margin-bottom: 12px;
+  font-size: 11.5px;
+  color: var(--ink-500);
+}
+.p-score b {
+  font-weight: 700;
+}
+.p-score .ps-bar {
+  height: 5px;
+  border-radius: 4px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.p-score .ps-bar i {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+}
+.p-score.bad .ps-bar i {
+  background: #e5533d;
+}
+.ps-tip {
+  display: block;
+  margin-top: 3px;
+  color: #b4453b;
+}
+.ps-tip--ok {
+  color: var(--green, #2fa36b);
 }
 .p-head {
   display: flex;

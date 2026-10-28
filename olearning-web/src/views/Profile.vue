@@ -12,7 +12,7 @@
             <h2>{{ profile.realName || profile.username }}</h2>
             <div class="id-tags">
               <span class="chip chip--brand">{{ roleName }}</span>
-              <span class="chip">@{{ profile.username }}</span>
+              <span class="chip">{{ noLabel }} {{ profile.userNo || '—' }}</span>
             </div>
             <p class="id-phone">
               <el-icon><Iphone /></el-icon>{{ profile.phone || '未填写手机号' }}
@@ -76,12 +76,17 @@
 
           <!-- 资料 -->
           <el-form v-show="tab === 'info'" label-position="top" class="form">
-            <el-form-item label="用户名">
-              <el-input :model-value="profile.username" disabled />
-              <span class="tip">登录名不可修改</span>
+            <el-form-item :label="noLabel + '（登录账号）'">
+              <el-input :model-value="profile.userNo" disabled />
+              <span class="tip">登录用的{{ noLabel }}由学校统一分配，如需修改请联系管理员</span>
+            </el-form-item>
+            <el-form-item label="用户名（昵称）">
+              <el-input v-model="profile.username" placeholder="3-20 位，显示在讨论区等位置" />
+              <span class="tip">用户名可以随时修改，和登录无关</span>
             </el-form-item>
             <el-form-item label="真实姓名">
-              <el-input v-model="profile.realName" placeholder="用于作业、成绩与教师端显示" />
+              <el-input :model-value="profile.realName" disabled />
+              <span class="tip">学籍姓名，只有管理员可以修改</span>
             </el-form-item>
             <el-form-item label="手机号">
               <el-input v-model="profile.phone" placeholder="11 位手机号" maxlength="11" />
@@ -198,6 +203,9 @@ const roleName = computed(
     ] || role.value
 )
 
+/** 学生叫学号，教师/管理员叫职工号 */
+const noLabel = computed(() => (role.value === 'STUDENT' ? '学号' : '职工号'))
+
 function barHeight(count: number) {
   const max = Math.max(1, ...((ov.value.week || []) as any[]).map((d) => d.count || 0))
   return `${Math.max(count ? 12 : 4, ((count || 0) / max) * 100)}%`
@@ -215,14 +223,14 @@ async function saveProfile() {  if (profile.value.phone && !/^1\d{10}$/.test(pro
   saving.value = true
   try {
     await request.put('/api/user/profile', {
-      realName: profile.value.realName,
+      username: profile.value.username,
       phone: profile.value.phone,
       avatar: profile.value.avatar
     })
     ElMessage.success('资料已更新')
     // 顶栏和侧栏都读 store，改完要同步，否则还显示旧名字
     if (userStore.userInfo) {
-      userStore.userInfo.realName = profile.value.realName
+      userStore.userInfo.username = profile.value.username
       userStore.userInfo.avatar = profile.value.avatar
       localStorage.setItem('userInfo', JSON.stringify(userStore.userInfo))
     }

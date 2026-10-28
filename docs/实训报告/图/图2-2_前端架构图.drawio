@@ -1,0 +1,67 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n109" name="页面-1">
+    <mxGraphModel dx="1106" dy="566" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1160" pageHeight="590" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="main.ts 入口 → createApp → 挂载 App.vue" vertex="1">
+          <mxGeometry height="36" width="424.8510638297873" x="392.42553191489367" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="b3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;fillColor=#FFFDF1;" value="components 通用组件" vertex="1">
+          <mxGeometry height="90" width="336.34042553191495" x="180" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="FileUploader 统一上传" vertex="1">
+          <mxGeometry height="36" width="141.61702127659575" x="188.85106382978722" y="382" as="geometry" />
+        </mxCell>
+        <mxCell id="m2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="FilePreview 预览 + PPT 放映" vertex="1">
+          <mxGeometry height="36" width="159.31914893617025" x="348.17021276595744" y="382" as="geometry" />
+        </mxCell>
+        <mxCell id="b4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;fillColor=#FFFDF1;" value="支撑层" vertex="1">
+          <mxGeometry height="200" width="477.9574468085107" x="534.0425531914894" y="344" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="router：路由表 + 登录守卫 + 角色守卫" vertex="1">
+          <mxGeometry height="36" width="221.27659574468086" x="542.8936170212767" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="stores：Pinia 登录态（token / 用户信息）" vertex="1">
+          <mxGeometry height="36" width="221.27659574468086" x="773.0212765957448" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="utils/request：Axios 封装，统一携带 token、401 跳登录" vertex="1">
+          <mxGeometry height="40" width="451.40425531914894" x="542.8936170212767" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="utils/file：withToken / openFile / triggerDownload（直链带 ?token=）" vertex="1">
+          <mxGeometry height="40" width="451.40425531914894" x="542.8936170212767" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="b5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;fillColor=#FFFDF1;" value="styles 主题层" vertex="1">
+          <mxGeometry height="105" width="336.34" x="180" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="t1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="theme.css 设计令牌单一来源：暖米白底 #fdf7f1 + 主橙 #ff6b35，页面禁写裸色值；弹窗一律 append-to-body" vertex="1">
+          <mxGeometry height="56" width="313" x="190" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="b1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;fillColor=#FFFDF1;" value="layouts 布局层" vertex="1">
+          <mxGeometry height="80" width="832" x="180" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="前台学习布局（顶栏 + 内容区）" vertex="1">
+          <mxGeometry height="36" width="231.11111111111111" x="374.72110953506706" y="122" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="后台管理布局（侧边导航 + 面包屑）" vertex="1">
+          <mxGeometry height="36" width="231.11111111111111" x="636.6470354609929" y="122" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;fillColor=#FFFDF1;" value="views 页面层（24 个页面组件）" vertex="1">
+          <mxGeometry height="140" width="832" x="180" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="v1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="前台：首页 / 课程广场 / 课程详情 / 学习页 / 测验 / 成绩 / 讨论 / 收藏 / 个人中心" vertex="1">
+          <mxGeometry height="44" width="477.62962962962956" x="203.11111111111111" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="v2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="教师端：学情看板 / 课程 / 章节 / 题库 / 试卷 / 作业 / 学生" vertex="1">
+          <mxGeometry height="44" width="477.62962962962956" x="203.11111111111111" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="v3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="管理端：统计 / 用户 / 审核 / 分类 / 公告" vertex="1">
+          <mxGeometry height="44" width="285.037037037037" x="711.5555555555557" y="222" as="geometry" />
+        </mxCell>
+        <mxCell id="v4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="登录 / 注册" vertex="1">
+          <mxGeometry height="44" width="285.037037037037" x="711.5555555555557" y="273" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

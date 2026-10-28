@@ -12,6 +12,23 @@
       </el-button>
     </section>
 
+    <!-- 课程标签筛选 -->
+    <section class="tags-bar">
+      <button class="tag-chip" :class="{ on: !filterCourseId }" @click="setCourse(null)">
+        全部课程
+      </button>
+      <button
+        v-for="c in courseTags"
+        :key="c.courseId"
+        class="tag-chip"
+        :class="{ on: filterCourseId === c.courseId }"
+        @click="setCourse(c.courseId)"
+      >
+        {{ c.courseTitle }}<i>{{ c.count }}</i>
+      </button>
+      <span v-if="!courseTags.length" class="ol-muted">还没有带课程标签的帖子</span>
+    </section>
+
     <div class="layout">
       <!-- ==================== 帖子列表 ==================== -->
       <main v-loading="loading" class="list">
@@ -25,14 +42,21 @@
             {{ (item.authorName || '匿').slice(0, 1) }}
           </div>
           <div class="p-body">
-            <h3>{{ item.post.title }}</h3>
+            <div class="p-top">
+              <span class="course-tag">
+                <el-icon><Collection /></el-icon>{{ item.courseTitle || '未关联课程' }}
+              </span>
+              <h3>{{ item.post.title }}</h3>
+            </div>
             <p class="excerpt">{{ item.post.content }}</p>
             <div class="p-meta">
               <span>{{ item.authorName }}</span>
               <span class="dot">·</span>
               <span>{{ fmt(item.post.createTime) }}</span>
               <span class="stat"><el-icon><ChatDotRound /></el-icon>{{ item.replyCount || 0 }}</span>
-              <span class="stat"><el-icon><Pointer /></el-icon>{{ item.post.likeCount || 0 }}</span>
+              <span class="stat" :class="{ helped: item.helped }">
+                <el-icon><Pointer /></el-icon>{{ item.post.helpfulCount || 0 }} 有帮助
+              </span>
             </div>
           </div>
           <el-icon class="arrow"><ArrowRight /></el-icon>
@@ -40,7 +64,7 @@
 
         <div v-if="!loading && !posts.length" class="ol-empty ol-card">
           <span class="icon">💬</span>
-          还没有帖子，第一个来提问吧
+          {{ filterCourseId ? '这门课还没有帖子，来发第一个' : '还没有帖子，第一个来提问吧' }}
         </div>
 
         <div v-if="total > size" class="pager">
@@ -80,8 +104,10 @@
               @click="openDetail(item.post.id)"
             >
               <span class="hot-no" :class="{ top: i < 3 }">{{ i + 1 }}</span>
-              <b>{{ item.post.title }}</b>
-              <span class="ol-muted">{{ item.replyCount || 0 }}</span>
+              <div class="hot-body">
+                <b>{{ item.post.title }}</b>
+                <span class="ol-muted">{{ item.courseTitle || '未关联课程' }}</span>
+              </div>
             </div>
             <div v-if="!hot.length" class="ol-empty" style="padding: 16px 0">暂无数据</div>
           </div>
@@ -139,13 +165,25 @@
           </el-button>
         </div>
 
+        <div class="d-course">
+          <el-icon><Collection /></el-icon>
+          {{ detail.courseTitle || '未关联课程' }}
+        </div>
+
         <h2 class="d-title">{{ detail.post.title }}</h2>
         <p class="d-content">{{ detail.post.content }}</p>
 
         <div class="d-actions">
-          <button class="like" @click="like(detail.post)">
-            <el-icon><Pointer /></el-icon> 有帮助 {{ detail.post.likeCount || 0 }}
+          <button
+            class="like"
+            :class="{ on: detail.helped }"
+            :disabled="detail.helped"
+            @click="markHelpful"
+          >
+            <el-icon><Pointer /></el-icon>
+            {{ detail.helped ? '已标记有帮助' : '有帮助' }} {{ detail.post.helpfulCount || 0 }}
           </button>
+          <span v-if="detail.helped" class="ol-muted">每个帖子只能标记一次</span>
         </div>
 
         <div class="replies">
@@ -181,17 +219,21 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import request from '@/utils/request'
 import { avatarColor } from '@/utils/cover'
 
+const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 
 const posts = ref<any[]>([])
 const hot = ref<any[]>([])
 const courses = ref<any[]>([])
+/** 课程标签：只列有帖子的课程，点一下就按课程筛选 */
+const courseTags = ref<any[]>([])
+const filterCourseId = ref<number | null>(null)
 const total = ref(0)
 const current = ref(1)
 const size = 8
@@ -215,7 +257,12 @@ async function load(page = 1) {
   current.value = page
   try {
     const data: any = await request.get('/api/public/discussions', {
-      params: { keyword: keyword.value || undefined, current: page, size }
+      params: {
+        keyword: keyword.value || undefined,
+        courseId: filterCourseId.value || undefined,
+        current: page,
+        size
+      }
     })
     posts.value = data.records || []
     total.value = data.total || 0
@@ -224,12 +271,27 @@ async function load(page = 1) {
   }
 }
 
+function setCourse(id: number | null) {
+  filterCourseId.value = filterCourseId.value === id ? null : id
+  load(1)
+}
+
+async function loadTags() {
+  courseTags.value = ((await request.get('/api/public/discussions/courses')) as any) || []
+}
+
 async function loadHot() {
   const data: any = await request.get('/api/public/discussions', {
     params: { current: 1, size: 30 }
   })
   const list = (data.records || []) as any[]
-  hot.value = [...list].sort((a, b) => (b.replyCount || 0) - (a.replyCount || 0)).slice(0, 5)
+  hot.value = [...list]
+    .sort(
+      (a, b) =>
+        (b.post?.helpfulCount || 0) * 2 + (b.replyCount || 0) -
+        ((a.post?.helpfulCount || 0) * 2 + (a.replyCount || 0))
+    )
+    .slice(0, 5)
 }
 
 function needLogin() {
@@ -287,10 +349,29 @@ async function removePost(id: number) {
   load(current.value)
 }
 
-async function like(post: any) {
+/**
+ * 标记「有帮助」：后端按 (帖子, 用户) 去重，一个人只能成功一次。
+ * 第二次点会返回 added=false，这里把按钮置灰而不是继续加数。
+ */
+async function markHelpful() {
   if (!userStore.isLogin) return needLogin()
-  await request.post(`/api/discussions/${post.id}/like`)
-  post.likeCount = (post.likeCount || 0) + 1
+  const post = detail.value?.post
+  if (!post || detail.value.helped) return
+  try {
+    const res: any = await request.post(`/api/discussions/${post.id}/helpful`)
+    if (res?.added) {
+      detail.value.helped = true
+      post.helpfulCount = (post.helpfulCount || 0) + 1
+      ElMessage.success('已标记为有帮助')
+    } else {
+      detail.value.helped = true
+      ElMessage.info(res?.message || '你已经点过有帮助了')
+    }
+    load(current.value)
+    loadHot()
+  } catch {
+    /* request 拦截器已提示 */
+  }
 }
 
 async function sendReply() {
@@ -308,8 +389,15 @@ async function sendReply() {
 onMounted(async () => {
   load(1)
   loadHot()
+  loadTags()
   const page: any = await request.get('/api/public/courses', { params: { size: 100 } })
   courses.value = page.records || []
+  // 从课程详情页「去讨论区提问」跳过来时，直接定位到该课程的标签
+  const from = Number(route.query.courseId)
+  if (from) {
+    filterCourseId.value = from
+    load(1)
+  }
 })
 </script>
 
@@ -363,6 +451,52 @@ onMounted(async () => {
   align-items: start;
 }
 
+/* ---------- 课程标签 ---------- */
+.tags-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-100);
+  background: var(--surface);
+  color: var(--ink-500);
+  font-size: 12.5px;
+  font-weight: 550;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.16s;
+}
+.tag-chip:hover {
+  border-color: var(--brand-200);
+  color: var(--brand);
+}
+.tag-chip i {
+  font-style: normal;
+  font-size: 10.5px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  color: var(--ink-400);
+}
+.tag-chip.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.tag-chip.on i {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+}
+
 /* ---------- 列表 ---------- */
 .list {
   display: flex;
@@ -401,6 +535,36 @@ onMounted(async () => {
   flex: 1;
   min-width: 0;
 }
+.p-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+  min-width: 0;
+}
+.p-top h3 {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.course-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  max-width: 190px;
+  padding: 2px 9px;
+  border-radius: var(--r-pill);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .p-body h3 {
   margin: 0 0 5px;
   font-size: 14.5px;
@@ -432,6 +596,10 @@ onMounted(async () => {
   align-items: center;
   gap: 3px;
   margin-left: 6px;
+}
+.stat.helped {
+  color: var(--brand);
+  font-weight: 600;
 }
 .arrow {
   color: var(--ink-300);
@@ -501,10 +669,21 @@ onMounted(async () => {
   background: var(--brand);
   color: #fff;
 }
-.hot-row b {
+.hot-body {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.hot-body b {
   font-size: 12.5px;
   font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hot-body span {
+  font-size: 10.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -531,6 +710,18 @@ onMounted(async () => {
 .d-meta span {
   font-size: 11.5px;
   color: var(--ink-400);
+}
+.d-course {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: 11.5px;
+  font-weight: 600;
 }
 .d-title {
   font-size: 20px;
@@ -569,6 +760,19 @@ onMounted(async () => {
 .like:hover {
   border-color: var(--brand-300);
   color: var(--brand);
+}
+.like.on {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+  color: var(--brand-700);
+}
+.like:disabled {
+  cursor: default;
+}
+.d-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .replies {

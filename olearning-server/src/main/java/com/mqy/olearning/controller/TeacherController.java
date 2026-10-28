@@ -227,6 +227,13 @@ public class TeacherController {
         return Result.ok(examService.savePaper(paper, UserContext.userId()));
     }
 
+    @Operation(summary = "发布试卷（重新编辑后需重新发布；要求题目分值合计 == 试卷总分）")
+    @PostMapping("/papers/{id}/publish")
+    public Result<Void> publishPaper(@PathVariable Long id) {
+        examService.publishPaper(id, UserContext.userId());
+        return Result.ok();
+    }
+
     @Operation(summary = "删除试卷")
     @DeleteMapping("/papers/{id}")
     public Result<Void> deletePaper(@PathVariable Long id) {
@@ -253,6 +260,15 @@ public class TeacherController {
     @DeleteMapping("/paper-questions/{id}")
     public Result<Void> removePaperQuestion(@PathVariable Long id) {
         examService.removePaperQuestion(id);
+        return Result.ok();
+    }
+
+    @Operation(summary = "直接修改试卷里某题的分值：body.score")
+    @PutMapping("/paper-questions/{id}/score")
+    public Result<Void> updatePaperQuestionScore(@PathVariable Long id,
+                                                 @RequestBody Map<String, Object> body) {
+        Integer score = body.get("score") == null ? null : Integer.valueOf(body.get("score").toString());
+        examService.updatePaperQuestionScore(id, score);
         return Result.ok();
     }
 

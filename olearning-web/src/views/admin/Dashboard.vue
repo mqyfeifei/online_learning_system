@@ -15,6 +15,22 @@
       </div>
     </div>
 
+    <!-- 待启用教师提醒 -->
+    <el-alert
+      v-if="pendingTeachers.length"
+      type="warning"
+      show-icon
+      :closable="false"
+      style="margin-bottom: 16px; border-radius: 12px; cursor: pointer"
+      @click="router.push('/admin/users')"
+    >
+      <template #title>
+        有 {{ pendingTeachers.length }} 个教师账号注册后待启用：
+        {{ pendingTeachers.map((t: any) => t.realName || t.username).join('、') }}。
+        点击前往「用户管理」处理。
+      </template>
+    </el-alert>
+
     <!-- 指标 -->
     <section class="ap-stats">
       <div class="ap-stat">
@@ -110,6 +126,7 @@ import { CHART_COLORS, donutOption, mountChart } from '@/utils/chart'
 const router = useRouter()
 const stats = ref<any>({})
 const pieRef = ref<HTMLElement>()
+const pendingTeachers = ref<any[]>([])
 
 const categoryRows = computed(() => {
   const map = (stats.value.courseByCategory || {}) as Record<string, number>
@@ -163,7 +180,14 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(async () => {
+  load()
+  try {
+    pendingTeachers.value = (await request.get('/api/admin/users/pending-teachers')) || []
+  } catch {
+    pendingTeachers.value = []
+  }
+})
 </script>
 
 <style scoped>

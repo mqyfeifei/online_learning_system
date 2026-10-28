@@ -1,0 +1,125 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n120" name="页面-1">
+    <mxGraphModel dx="1439" dy="1695" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="880" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="s0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" value="学生请求预览课件" vertex="1">
+          <mxGeometry height="44" width="130" x="260" y="-44" as="geometry" />
+        </mxCell>
+        <mxCell id="auth" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="鉴权与寻址（rid / url 双寻址，校验选课或公开权限）" vertex="1">
+          <mxGeometry height="44" width="230" x="210" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d_type" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="判断文件类型" vertex="1">
+          <mxGeometry height="80" width="130" x="500" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="pdf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="PDF：iframe 原生渲染" vertex="1">
+          <mxGeometry height="40" width="190" x="700" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="img" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="图片：img 标签渲染" vertex="1">
+          <mxGeometry height="40" width="190" x="700" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="av" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="音视频：video / audio 播放" vertex="1">
+          <mxGeometry height="40" width="190" x="700" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ooxml" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="docx / pptx / xlsx Apache POI（OOXML）" vertex="1">
+          <mxGeometry height="56" width="190" x="700" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="ole2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="doc / ppt / xls（旧格式） poi-scratchpad（HWPF/HSLF/HSSF）" vertex="1">
+          <mxGeometry height="56" width="190" x="700" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="na" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;" value="其他格式：提示不支持预览，可申请下载" vertex="1">
+          <mxGeometry height="40" width="190" x="700" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="parse" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="解析为统一内容块：段落文本 / 表格 / 逐页图片（base64，单文件 ≤4MB）" vertex="1">
+          <mxGeometry height="56" width="300" x="460" y="490" as="geometry" />
+        </mxCell>
+        <mxCell id="json" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="返回 JSON 内容块列表" vertex="1">
+          <mxGeometry height="40" width="200" x="460" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="render" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="前端 FilePreview 统一弹窗渲染（多页 / 滚动）" vertex="1">
+          <mxGeometry height="44" width="210" x="200" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="ppt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="pptx：全屏放映（方向键 / 空格翻页、自动播放、Esc 退出）" vertex="1">
+          <mxGeometry height="56" width="240" x="180" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="dl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="下载按钮：受课程 resource_downloadable 开关控制" vertex="1">
+          <mxGeometry height="56" width="220" x="470" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;" value="预览完成" vertex="1">
+          <mxGeometry height="40" width="120" x="470" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="n101" edge="1" parent="1" source="s0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="auth" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n102" edge="1" parent="1" source="auth" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="d_type" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n103" edge="1" parent="1" source="d_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="pdf" value="pdf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n104" edge="1" parent="1" source="d_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="img" value="图片">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n105" edge="1" parent="1" source="d_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="av" value="音视频">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n106" edge="1" parent="1" source="d_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="ooxml" value="OOXML">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n107" edge="1" parent="1" source="d_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="ole2" value="旧二进制">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n108" edge="1" parent="1" source="d_type" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="na" value="其他">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n109" edge="1" parent="1" source="ooxml" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="parse" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n110" edge="1" parent="1" source="ole2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="parse" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n111" edge="1" parent="1" source="pdf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="render" value="直出">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="795" y="100" />
+              <mxPoint x="150" y="100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n112" edge="1" parent="1" source="img" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="render" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="140" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n113" edge="1" parent="1" source="av" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="render" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n114" edge="1" parent="1" source="parse" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="json" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n115" edge="1" parent="1" source="json" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="render" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n116" edge="1" parent="1" source="render" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="ppt" value="pptx">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n117" edge="1" parent="1" source="render" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="dl" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n118" edge="1" parent="1" source="ppt" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="e0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n119" edge="1" parent="1" source="dl" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="e0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

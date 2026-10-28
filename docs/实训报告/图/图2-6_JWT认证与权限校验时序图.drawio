@@ -1,0 +1,127 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n118" name="页面-1">
+    <mxGraphModel dx="1443" dy="738" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1120" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cli" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;strokeWidth=2;fontSize=18;" value="浏览器（客户端）" vertex="1">
+          <mxGeometry height="44" width="160" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n101" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;strokeWidth=2;fontSize=18;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="84" as="sourcePoint" />
+            <mxPoint x="120" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="auth" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;strokeWidth=2;fontSize=18;" value="AuthController" vertex="1">
+          <mxGeometry height="44" width="160" x="260" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n102" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;strokeWidth=2;fontSize=18;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="340" y="84" as="sourcePoint" />
+            <mxPoint x="340" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="int" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;strokeWidth=2;fontSize=18;" value="JwtInterceptor" vertex="1">
+          <mxGeometry height="44" width="160" x="480" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n103" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;strokeWidth=2;fontSize=18;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="84" as="sourcePoint" />
+            <mxPoint x="560" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ctx" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;strokeWidth=2;fontSize=18;" value="UserContext（ThreadLocal）" vertex="1">
+          <mxGeometry height="44" width="160" x="700" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n104" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;strokeWidth=2;fontSize=18;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="780" y="84" as="sourcePoint" />
+            <mxPoint x="780" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="biz" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cce5ff;strokeColor=#36393d;strokeWidth=2;fontSize=18;" value="业务 Controller" vertex="1">
+          <mxGeometry height="44" width="160" x="900" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n105" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;strokeWidth=2;fontSize=18;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="84" as="sourcePoint" />
+            <mxPoint x="980" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n106" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="1：POST /api/auth/login（user_no + password）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="130" as="sourcePoint" />
+            <mxPoint x="340" y="130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n107" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="2：校验账号密码（MD5+盐比对）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="340" y="180" as="sourcePoint" />
+            <mxPoint x="340" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n108" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="3：返回 JWT token">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="340" y="230" as="sourcePoint" />
+            <mxPoint x="120" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n109" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="4：请求业务接口，携带 Authorization: Bearer token">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="300" as="sourcePoint" />
+            <mxPoint x="560" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n110" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="5：解析并校验 token 签名与有效期">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="350" as="sourcePoint" />
+            <mxPoint x="560" y="350" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n111" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="6：写入当前用户（ThreadLocal）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="400" as="sourcePoint" />
+            <mxPoint x="780" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n112" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="7：读取并比对 @RequireRole 注解">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="450" as="sourcePoint" />
+            <mxPoint x="560" y="450" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n113" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="8a：越权 → 返回 403 / 未登录 → 401">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="482" as="sourcePoint" />
+            <mxPoint x="120" y="482" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n114" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="8b：校验通过 → 放行调用">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="552" as="sourcePoint" />
+            <mxPoint x="980" y="552" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n115" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="9：执行业务逻辑（Service / Mapper）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="595" as="sourcePoint" />
+            <mxPoint x="980" y="595" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n116" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="10：返回统一响应 Result{code, message, data}">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="629" as="sourcePoint" />
+            <mxPoint x="120" y="629" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n117" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="11：请求结束，afterCompletion 清理 ThreadLocal">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="699" as="sourcePoint" />
+            <mxPoint x="780" y="699" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -34,3 +34,4 @@ Thumbs.db
 *.tsbuildinfo
 olearning-web/vite.config.js
 olearning-web/vite.config.d.ts
+olearning-web/vite.config.smoke.ts

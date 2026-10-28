@@ -22,6 +22,7 @@ public class StatsService {
     private final ExamRecordMapper recordMapper;
     private final ExamPaperMapper paperMapper;
     private final SubmissionMapper submissionMapper;
+    private final AssignmentMapper assignmentMapper;
     private final CourseCategoryMapper categoryMapper;
 
     /** 平台统计：管理员首页卡片 */
@@ -122,32 +123,92 @@ public class StatsService {
         return data;
     }
 
-    /** 学生成绩：作业 + 测验汇总、平均分 */
+    /**
+     * 学生成绩汇总：作业 + 测验，每条都带上课程信息，
+     * 前端成绩页据此按课程筛选 / 分组，不再是一锅粥。
+     */
     public Map<String, Object> student(Long userId) {
         List<Map<String, Object>> items = new ArrayList<>();
 
         submissionMapper.selectList(new LambdaQueryWrapper<Submission>()
                         .eq(Submission::getUserId, userId)
                         .isNotNull(Submission::getScore))
-                .forEach(s -> items.add(Map.of(
-                        "type", "作业", "score", s.getScore(),
-                        "time", s.getSubmitTime() == null ? "" : s.getSubmitTime().toString())));
+                .forEach(s -> {
+                    Assignment a = assignmentMapper.selectById(s.getAssignmentId());
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("type", "作业");
+                    item.put("refId", s.getAssignmentId());
+                    item.put("title", a == null ? "已删除作业" : a.getTitle());
+                    item.put("courseId", a == null ? null : a.getCourseId());
+                    item.put("courseTitle", courseTitleOf(a == null ? null : a.getCourseId()));
+                    item.put("score", s.getScore());
+                    item.put("time", s.getSubmitTime() == null ? "" : s.getSubmitTime().toString());
+                    items.add(item);
+                });
 
         recordMapper.selectList(new LambdaQueryWrapper<ExamRecord>()
                         .eq(ExamRecord::getUserId, userId)
                         .isNotNull(ExamRecord::getScore))
-                .forEach(r -> items.add(Map.of(
-                        "type", "测验", "score", r.getScore(),
-                        "time", r.getSubmitTime() == null ? "" : r.getSubmitTime().toString())));
+                .forEach(r -> {
+                    ExamPaper p = paperMapper.selectById(r.getPaperId());
+                    Map<String, Object> item = new LinkedHashMap<>();
+                    item.put("type", "测验");
+                    item.put("refId", r.getId());
+                    item.put("title", p == null ? "已删除试卷" : p.getTitle());
+                    item.put("courseId", p == null ? null : p.getCourseId());
+                    item.put("courseTitle", courseTitleOf(p == null ? null : p.getCourseId()));
+                    item.put("score", r.getScore());
+                    item.put("time", r.getSubmitTime() == null ? "" : r.getSubmitTime().toString());
+                    items.add(item);
+                });
+
+        items.sort((a, b) -> String.valueOf(b.get("time")).compareTo(String.valueOf(a.get("time"))));
 
         double avg = items.stream()
-                .mapToInt(i -> (Integer) i.get("score"))
+                .mapToInt(i -> ((Number) i.get("score")).intValue())
                 .average().orElse(0);
+
+        // 按课程汇总，前端用它做「课程维度」的成绩单
+        Map<Long, Map<String, Object>> byCourse = new LinkedHashMap<>();
+        for (Map<String, Object> item : items) {
+            Long cid = (Long) item.get("courseId");
+            if (cid == null) {
+                continue;
+            }
+            Map<String, Object> g = byCourse.computeIfAbsent(cid, k -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("courseId", k);
+                m.put("courseTitle", item.get("courseTitle"));
+                m.put("count", 0);
+                m.put("sum", 0);
+                m.put("max", 0);
+                return m;
+            });
+            int score = ((Number) item.get("score")).intValue();
+            g.put("count", (Integer) g.get("count") + 1);
+            g.put("sum", (Integer) g.get("sum") + score);
+            g.put("max", Math.max((Integer) g.get("max"), score));
+        }
+        List<Map<String, Object>> courseStats = new ArrayList<>(byCourse.values());
+        courseStats.forEach(g -> {
+            int count = (Integer) g.get("count");
+            g.put("average", count == 0 ? 0 : Math.round((Integer) g.get("sum") * 10.0 / count) / 10.0);
+            g.remove("sum");
+        });
 
         Map<String, Object> data = new HashMap<>();
         data.put("items", items);
+        data.put("courseStats", courseStats);
         data.put("average", Math.round(avg * 10) / 10.0);
         data.put("count", items.size());
         return data;
+    }
+
+    private String courseTitleOf(Long courseId) {
+        if (courseId == null) {
+            return "";
+        }
+        Course c = courseMapper.selectById(courseId);
+        return c == null ? "" : c.getTitle();
     }
 }

@@ -28,7 +28,7 @@
           </span>
           <div class="ap-info">
             <b>{{ a.realName || a.username }}</b>
-            <span>@{{ a.username }}<template v-if="a.phone"> · {{ a.phone }}</template> · {{ fmt(a.applyTime) }}</span>
+            <span>{{ a.userNo || a.username }}<template v-if="a.phone"> · {{ a.phone }}</template> · {{ fmt(a.applyTime) }}</span>
           </div>
           <span class="grow" />
           <el-button size="small" type="primary" @click="auditApply(a, true)">通过</el-button>
@@ -79,9 +79,14 @@
                 </span>
                 <div>
                   <b>{{ row.realName || row.username }}</b>
-                  <span>@{{ row.username }}</span>
+                  <span>{{ row.userNo || row.username }}</span>
                 </div>
               </div>
+            </template>
+          </el-table-column>
+          <el-table-column label="学号" width="150">
+            <template #default="{ row }">
+              <b>{{ row.userNo || '—' }}</b>
             </template>
           </el-table-column>
           <el-table-column prop="phone" label="手机号" width="150" />
@@ -116,8 +121,9 @@
     <!-- 导入学生名单 -->
     <el-dialog append-to-body v-model="importDialog" title="导入学生名单" width="620px" top="6vh">
       <el-alert type="info" :closable="false" show-icon class="imp-tip">
-        每行一个<strong>已注册的登录名</strong>，也支持「登录名,姓名」两列；
-        账号不存在或不是学生角色会跳过，并在下方列出原因。
+        每行一个<strong>学号</strong>，也支持「学号,姓名」两列；
+        学号查不到时会退回按用户名匹配（兼容旧名单）。
+        账号不存在、不是学生角色或已被禁用会跳过，并在下方列出原因。
       </el-alert>
 
       <div class="imp-toolbar">
@@ -138,7 +144,7 @@
         v-model="importText"
         type="textarea"
         :rows="9"
-        placeholder="student1&#10;student2&#10;student3,张三"
+        placeholder="20260001&#10;20260002&#10;20260003,张三"
       />
 
       <div v-if="importResult" class="imp-result">
@@ -149,6 +155,12 @@
         <div v-if="importResult.failed.length" class="ir-list">
           <div v-for="(f, i) in importResult.failed" :key="i" class="ir-row">
             第 {{ f.line }} 行 · {{ f.username || '（空）' }} —— {{ f.reason }}
+          </div>
+        </div>
+        <div v-if="importResult.success.length" class="ir-list">
+          <div v-for="(s, i) in importResult.success" :key="i" class="ir-row ok">
+            第 {{ s.line }} 行 · {{ s.userNo || s.username }} {{ s.realName }}
+            <template v-if="s.note">（{{ s.note }}）</template>
           </div>
         </div>
       </div>
@@ -387,5 +399,8 @@ onMounted(async () => {
   font-size: 12px;
   color: #b4453b;
   line-height: 1.7;
+}
+.ir-row.ok {
+  color: var(--green, #2fa36b);
 }
 </style>

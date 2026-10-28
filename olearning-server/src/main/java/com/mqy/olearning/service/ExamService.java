@@ -44,6 +44,7 @@ public class ExamService {
     private final ExamRecordMapper recordMapper;
     private final ExamMarkMapper markMapper;
     private final CourseMapper courseMapper;
+    private final ChapterMapper chapterMapper;
     private final SysUserMapper userMapper;
     private final EnrollmentService enrollmentService;
     private final ObjectMapper objectMapper;
@@ -101,10 +102,45 @@ public class ExamService {
 
     // ---------------- 试卷 ----------------
 
+    /**
+     * 教师端试卷列表：补上题目数、题目分值合计与章节标题。
+     * 题目分值合计用来提示「能不能发布」——必须等于试卷设置的总分。
+     */
     public List<ExamPaper> papers(Long courseId) {
-        return paperMapper.selectList(new LambdaQueryWrapper<ExamPaper>()
+        List<ExamPaper> list = paperMapper.selectList(new LambdaQueryWrapper<ExamPaper>()
                 .eq(ExamPaper::getCourseId, courseId)
                 .orderByDesc(ExamPaper::getId));
+        for (ExamPaper p : list) {
+            fillPaperStats(p);
+        }
+        return list;
+    }
+
+    /** 学生端可见的试卷：必须已发布，未发布的试卷教师自己还在调 */
+    public List<ExamPaper> publishedPapers(Long courseId) {
+        return paperMapper.selectList(new LambdaQueryWrapper<ExamPaper>()
+                .eq(ExamPaper::getCourseId, courseId)
+                .eq(ExamPaper::getPublishStatus, 1)
+                .eq(ExamPaper::getStatus, 1)
+                .orderByDesc(ExamPaper::getId));
+    }
+
+    /** 回填题目数与分值合计 */
+    private void fillPaperStats(ExamPaper paper) {
+        List<PaperQuestion> pqs = paperQuestionMapper.selectList(new LambdaQueryWrapper<PaperQuestion>()
+                .eq(PaperQuestion::getPaperId, paper.getId()));
+        paper.setQuestionCount(pqs.size());
+        paper.setQuestionScore(pqs.stream()
+                .mapToInt(pq -> pq.getScore() == null ? 0 : pq.getScore()).sum());
+        paper.setChapterTitle(chapterTitle(paper.getChapterId()));
+    }
+
+    private String chapterTitle(Long chapterId) {
+        if (chapterId == null) {
+            return "";
+        }
+        Chapter chapter = chapterMapper.selectById(chapterId);
+        return chapter == null ? "" : chapter.getTitle();
     }
 
     public Long savePaper(ExamPaper paper, Long teacherId) {
@@ -122,11 +158,68 @@ public class ExamService {
             paper.setStatus(1);
         }
         if (paper.getId() == null) {
+            // 新建的试卷一律是「未发布」，教师组好卷再点发布
+            paper.setPublishStatus(0);
+            paper.setVersion(1);
             paperMapper.insert(paper);
         } else {
+            // 编辑已发布的试卷 → 打回未发布，学生端暂时看不到，需重新发布
+            ExamPaper old = paperMapper.selectById(paper.getId());
+            if (old != null && Integer.valueOf(1).equals(old.getPublishStatus())) {
+                paper.setPublishStatus(0);
+            } else {
+                paper.setPublishStatus(old == null ? 0 : old.getPublishStatus());
+            }
+            paper.setVersion(old == null || old.getVersion() == null ? 1 : old.getVersion());
             paperMapper.updateById(paper);
         }
         return paper.getId();
+    }
+
+    /**
+     * 发布试卷（或重新发布）。
+     * <p>发布条件：试卷里至少有 1 道题，且「所有题目分值之和」必须等于试卷设置的总分。
+     * <p>重新发布会让版本号 +1：学生那一侧的已提交答卷变成「未完成，需要重做」，
+     * 但旧答卷记录与作答内容全部保留，教师仍能在批阅列表里查到历史作答。
+     */
+    @Transactional
+    public void publishPaper(Long paperId, Long teacherId) {
+        ExamPaper paper = paperMapper.selectById(paperId);
+        if (paper == null) {
+            throw new BusinessException("试卷不存在");
+        }
+        checkOwner(paper.getCourseId(), teacherId);
+
+        List<PaperQuestion> pqs = paperQuestionMapper.selectList(new LambdaQueryWrapper<PaperQuestion>()
+                .eq(PaperQuestion::getPaperId, paperId));
+        if (pqs.isEmpty()) {
+            throw new BusinessException("试卷还没有题目，先组卷再发布");
+        }
+        int sum = pqs.stream().mapToInt(pq -> pq.getScore() == null ? 0 : pq.getScore()).sum();
+        int total = paper.getTotalScore() == null ? 100 : paper.getTotalScore();
+        if (sum != total) {
+            throw new BusinessException(
+                    "题目分值合计 " + sum + " 分，与试卷总分 " + total + " 分不一致，请调整后再发布");
+        }
+
+        ExamPaper update = new ExamPaper();
+        update.setId(paperId);
+        update.setPublishStatus(1);
+        update.setPublishedAt(LocalDateTime.now());
+        update.setVersion((paper.getVersion() == null ? 0 : paper.getVersion()) + 1);
+        paperMapper.updateById(update);
+    }
+
+    /** 试卷内容有变动（加题/删题/改分）时，已发布的试卷打回未发布 */
+    private void markDirty(Long paperId) {
+        ExamPaper paper = paperMapper.selectById(paperId);
+        if (paper == null || !Integer.valueOf(1).equals(paper.getPublishStatus())) {
+            return;
+        }
+        ExamPaper update = new ExamPaper();
+        update.setId(paperId);
+        update.setPublishStatus(0);
+        paperMapper.updateById(update);
     }
 
     public void removePaper(Long paperId, Long teacherId) {
@@ -154,10 +247,29 @@ public class ExamService {
         pq.setScore(score == null ? 10 : score);
         pq.setSort(0);
         paperQuestionMapper.insert(pq);
+        markDirty(paperId);
     }
 
     public void removePaperQuestion(Long id) {
+        PaperQuestion pq = paperQuestionMapper.selectById(id);
+        if (pq == null) {
+            return;
+        }
         paperQuestionMapper.deleteById(id);
+        markDirty(pq.getPaperId());
+    }
+
+    /** 直接在试卷里改某题分值（前端不必再走「删了再加」） */
+    public void updatePaperQuestionScore(Long paperQuestionId, Integer score) {
+        PaperQuestion pq = paperQuestionMapper.selectById(paperQuestionId);
+        if (pq == null) {
+            throw new BusinessException("题目不在试卷中");
+        }
+        PaperQuestion update = new PaperQuestion();
+        update.setId(paperQuestionId);
+        update.setScore(score == null || score < 1 ? 1 : score);
+        paperQuestionMapper.updateById(update);
+        markDirty(pq.getPaperId());
     }
 
     /** 教师 / 学生视角看试卷题目；withAnswer=false 时不返回答案 */
@@ -196,12 +308,15 @@ public class ExamService {
         if (paper == null || paper.getStatus() == null || paper.getStatus() != 1) {
             throw new BusinessException("试卷不存在或未启用");
         }
+        if (!Integer.valueOf(1).equals(paper.getPublishStatus())) {
+            throw new BusinessException("该试卷教师尚未发布，暂时不能作答");
+        }
         if (!enrollmentService.isEnrolled(userId, paper.getCourseId())) {
             throw new BusinessException("请先选修该课程再参加测验");
         }
         checkWindow(paper);
 
-        ExamRecord done = latestRecord(paperId, userId);
+        ExamRecord done = latestRecord(paperId, userId, paper.getVersion());
         if (done != null) {
             throw new BusinessException("该测验已完成，不能重复作答");
         }
@@ -228,10 +343,16 @@ public class ExamService {
         return time.toString().replace('T', ' ').substring(0, 16);
     }
 
-    private ExamRecord latestRecord(Long paperId, Long userId) {
+    /**
+     * 当前有效答卷：只看「试卷当前发布版本」的记录。
+     * 教师重新发布后版本号变了，旧记录就不再是「本次已完成」，
+     * 学生需要重新作答，但旧记录仍留在库里供教师查阅。
+     */
+    private ExamRecord latestRecord(Long paperId, Long userId, Integer version) {
         List<ExamRecord> records = recordMapper.selectList(new LambdaQueryWrapper<ExamRecord>()
                 .eq(ExamRecord::getPaperId, paperId)
                 .eq(ExamRecord::getUserId, userId)
+                .eq(ExamRecord::getPaperVersion, version == null ? 1 : version)
                 .orderByDesc(ExamRecord::getId));
         return records.isEmpty() ? null : records.get(0);
     }
@@ -243,8 +364,11 @@ public class ExamService {
         if (paper == null) {
             throw new BusinessException("试卷不存在");
         }
+        if (!Integer.valueOf(1).equals(paper.getPublishStatus())) {
+            throw new BusinessException("该试卷已撤下发布，无法交卷");
+        }
         checkWindow(paper);
-        ExamRecord submitted = latestRecord(paper.getId(), userId);
+        ExamRecord submitted = latestRecord(paper.getId(), userId, paper.getVersion());
         if (submitted != null) {
             throw new BusinessException("该测验已提交，不能重复交卷");
         }
@@ -295,6 +419,7 @@ public class ExamService {
 
         ExamRecord record = new ExamRecord();
         record.setPaperId(paper.getId());
+        record.setPaperVersion(paper.getVersion() == null ? 1 : paper.getVersion());
         record.setUserId(userId);
         record.setAnswersJson(writeJson(answers));
         record.setObjectiveScore(objectiveScore);
@@ -320,23 +445,48 @@ public class ExamService {
         return vo;
     }
 
-    public List<Map<String, Object>> myRecords(Long userId) {
+    /**
+     * 我的测验记录：带上课程、章节、试卷版本信息。
+     * <p>教师重新发布试卷后版本会变，旧答卷的 current=false（已作废、需要重做），
+     * 但记录本身保留，学生仍能看到当时的作答与得分。
+     * @param courseId 传了就只返回该课程的记录，供成绩页按课程筛选
+     */
+    public List<Map<String, Object>> myRecords(Long userId, Long courseId) {
         List<ExamRecord> records = recordMapper.selectList(new LambdaQueryWrapper<ExamRecord>()
                 .eq(ExamRecord::getUserId, userId)
                 .orderByDesc(ExamRecord::getId));
         List<Map<String, Object>> result = new ArrayList<>();
         for (ExamRecord r : records) {
             ExamPaper paper = paperMapper.selectById(r.getPaperId());
-            Map<String, Object> item = new HashMap<>();
+            if (courseId != null && (paper == null || !courseId.equals(paper.getCourseId()))) {
+                continue;
+            }
+            int version = paper == null || paper.getVersion() == null ? 1 : paper.getVersion();
+            Map<String, Object> item = new LinkedHashMap<>();
             item.put("record", r);
             item.put("paperTitle", paper == null ? "已删除试卷" : paper.getTitle());
             item.put("courseId", paper == null ? null : paper.getCourseId());
+            item.put("courseTitle", courseTitleOf(paper == null ? null : paper.getCourseId()));
+            item.put("chapterId", paper == null ? null : paper.getChapterId());
+            item.put("chapterTitle", chapterTitle(paper == null ? null : paper.getChapterId()));
             item.put("paperStartTime", paper == null ? null : paper.getStartTime());
             item.put("paperEndTime", paper == null ? null : paper.getEndTime());
             item.put("totalScore", paper == null ? 100 : paper.getTotalScore());
+            item.put("passScore", paper == null ? 60 : paper.getPassScore());
+            item.put("duration", paper == null ? 30 : paper.getDuration());
+            item.put("publishStatus", paper == null ? 0 : paper.getPublishStatus());
+            item.put("current", r.getPaperVersion() != null && r.getPaperVersion() == version);
             result.add(item);
         }
         return result;
+    }
+
+    private String courseTitleOf(Long courseId) {
+        if (courseId == null) {
+            return "";
+        }
+        Course course = courseMapper.selectById(courseId);
+        return course == null ? "" : course.getTitle();
     }
 
     /** 查看某次答卷的错题与解析 */
@@ -364,6 +514,7 @@ public class ExamService {
                 .eq(ExamRecord::getPaperId, paperId)
                 .orderByDesc(ExamRecord::getId));
         List<Map<String, Object>> result = new ArrayList<>();
+        int version = paper.getVersion() == null ? 1 : paper.getVersion();
         for (ExamRecord r : records) {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("record", r);
@@ -374,6 +525,9 @@ public class ExamService {
             item.put("studentName", user == null ? "未知学生"
                     : (user.getRealName() == null || user.getRealName().isBlank()
                     ? user.getUsername() : user.getRealName()));
+            item.put("studentNo", user == null ? "" : nullToEmpty(user.getUserNo()));
+            // 试卷重新发布后，旧版本答卷只是留档，不算本轮有效作答
+            item.put("current", r.getPaperVersion() != null && r.getPaperVersion() == version);
             result.add(item);
         }
         return result;
@@ -649,6 +803,10 @@ public class ExamService {
         } catch (Exception e) {
             return Map.of();
         }
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void checkOwner(Long courseId, Long teacherId) {

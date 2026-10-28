@@ -1,0 +1,133 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n119" name="页面-1">
+    <mxGraphModel dx="2059" dy="849" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1120" pageHeight="870" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="stu" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;strokeWidth=2;" value="学生（浏览器）" vertex="1">
+          <mxGeometry height="44" width="160" x="40" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n101" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;fontSize=18;strokeWidth=2;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="84" as="sourcePoint" />
+            <mxPoint x="120" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ctl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;strokeWidth=2;" value="ExamController" vertex="1">
+          <mxGeometry height="44" width="160" x="280" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n102" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;fontSize=18;strokeWidth=2;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="84" as="sourcePoint" />
+            <mxPoint x="360" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="svc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;strokeWidth=2;" value="ExamService" vertex="1">
+          <mxGeometry height="44" width="160" x="520" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n103" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;fontSize=18;strokeWidth=2;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="84" as="sourcePoint" />
+            <mxPoint x="600" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="db" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;strokeWidth=2;" value="MySQL" vertex="1">
+          <mxGeometry height="44" width="160" x="760" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n104" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;fontSize=18;strokeWidth=2;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="84" as="sourcePoint" />
+            <mxPoint x="840" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="tea" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=18;strokeWidth=2;" value="教师端" vertex="1">
+          <mxGeometry height="44" width="160" x="960" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="n105" edge="1" parent="1" style="html=1;endArrow=none;dashed=1;strokeColor=#666666;fontSize=18;strokeWidth=2;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1040" y="84" as="sourcePoint" />
+            <mxPoint x="1040" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n106" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="1：GET /api/papers/{id}/start 开始答题">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="130" as="sourcePoint" />
+            <mxPoint x="360" y="130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n107" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="2：startExam(paperId, userId)">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="180" as="sourcePoint" />
+            <mxPoint x="600" y="180" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n108" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="3：校验发布状态 / 时间窗 checkWindow / 是否已交卷">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="230" as="sourcePoint" />
+            <mxPoint x="600" y="230" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n109" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="4：查询试卷与题目（withAnswer=false，剔除答案字段）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="280" as="sourcePoint" />
+            <mxPoint x="840" y="280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n110" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="5：返回题目列表（不含 answer / analysis）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="330" as="sourcePoint" />
+            <mxPoint x="120" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n111" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="6：loop 逐题作答，草稿防抖 800~1000ms 写入 localStorage">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="400" as="sourcePoint" />
+            <mxPoint x="120" y="400" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n112" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="7：POST /api/exams/submit（answers 映射）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="470" as="sourcePoint" />
+            <mxPoint x="360" y="470" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n113" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="8：submit() 事务内：校验时间窗 + 重复提交拦截">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="360" y="520" as="sourcePoint" />
+            <mxPoint x="600" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n114" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="9：逐题判分（客观题归一化比对 / 填空按空比对）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="570" as="sourcePoint" />
+            <mxPoint x="840" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n115" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="10：保存 exam_record（answers_json 快照 + 版本号）">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="620" as="sourcePoint" />
+            <mxPoint x="840" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n116" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="11：返回成绩、逐题对错与解析">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="680" as="sourcePoint" />
+            <mxPoint x="120" y="680" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n117" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="12：含问答题 → mark_status=1 待批阅，教师逐题给分落 exam_mark">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600" y="740" as="sourcePoint" />
+            <mxPoint x="1040" y="740" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n118" edge="1" parent="1" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;curved=0;rounded=0;fontSize=18;strokeWidth=2;" value="13：学生查看最终成绩与教师评语">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1040" y="800" as="sourcePoint" />
+            <mxPoint x="120" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

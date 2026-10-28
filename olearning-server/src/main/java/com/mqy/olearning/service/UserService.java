@@ -28,18 +28,31 @@ public class UserService {
     private final SysUserMapper userMapper;
     private final JwtUtil jwtUtil;
 
+    /** 学号/职工号规则：4-32 位字母、数字、- 或 _，全平台唯一 */
+    private static final String USER_NO_PATTERN = "^[A-Za-z0-9_-]{4,32}$";
+
     /** 注册：教师注册后需管理员启用（status=0），学生直接可用 */
     public void register(RegisterDTO dto) {
-        Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUsername, dto.getUsername()));
-        if (count != null && count > 0) {
+        String userNo = dto.getUserNo() == null ? "" : dto.getUserNo().trim();
+        String username = dto.getUsername() == null ? "" : dto.getUsername().trim();
+        if (!userNo.matches(USER_NO_PATTERN)) {
+            throw new BusinessException("学号/职工号为 4-32 位字母、数字、- 或 _");
+        }
+        if (username.length() < 3 || username.length() > 20) {
+            throw new BusinessException("用户名长度 3-20 位");
+        }
+        if (existsUserNo(userNo)) {
+            throw new BusinessException("该学号/职工号已被注册");
+        }
+        if (existsUsername(username)) {
             throw new BusinessException("用户名已存在");
         }
         String role = "TEACHER".equals(dto.getRole()) ? "TEACHER" : "STUDENT";
         String salt = Md5Util.randomSalt();
 
         SysUser user = new SysUser();
-        user.setUsername(dto.getUsername());
+        user.setUserNo(userNo);
+        user.setUsername(username);
         user.setSalt(salt);
         user.setPassword(Md5Util.encrypt(dto.getPassword(), salt));
         user.setRealName(dto.getRealName());
@@ -50,19 +63,34 @@ public class UserService {
         userMapper.insert(user);
     }
 
+    /** 登录用学号/职工号，不用用户名 */
     public LoginVO login(LoginDTO dto) {
+        String account = dto.getAccount() == null ? "" : dto.getAccount().trim();
         SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUsername, dto.getUsername()));
+                .eq(SysUser::getUserNo, account)
+                .last("limit 1"));
         // 统一提示，避免暴露"用户是否存在"
         if (user == null || !Md5Util.encrypt(dto.getPassword(), user.getSalt()).equals(user.getPassword())) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException("学号/职工号或密码错误");
         }
         if (user.getStatus() != null && user.getStatus() == 0) {
             throw new BusinessException("账号已被禁用或尚未通过管理员审核");
         }
-        String token = jwtUtil.createToken(user.getId(), user.getUsername(), user.getRole());
-        return new LoginVO(token, user.getId(), user.getUsername(),
+        String token = jwtUtil.createToken(user.getId(), user.getUserNo(), user.getRole());
+        return new LoginVO(token, user.getId(), user.getUserNo(), user.getUsername(),
                 user.getRealName(), user.getRole(), user.getAvatar());
+    }
+
+    private boolean existsUserNo(String userNo) {
+        Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUserNo, userNo));
+        return count != null && count > 0;
+    }
+
+    private boolean existsUsername(String username) {
+        Long count = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUsername, username));
+        return count != null && count > 0;
     }
 
     public SysUser getById(Long id) {
@@ -75,12 +103,66 @@ public class UserService {
         return user;
     }
 
+    /**
+     * 个人中心自助修改：只能改用户名、手机号、头像。
+     * 真实姓名是学籍信息，学生/教师自己不能改，只能由管理员在后台改（见 adminUpdateUser）。
+     */
     public void updateProfile(Long userId, SysUser dto) {
+        SysUser current = userMapper.selectById(userId);
+        if (current == null) {
+            throw new BusinessException("用户不存在");
+        }
         SysUser user = new SysUser();
         user.setId(userId);
-        user.setRealName(dto.getRealName());
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+            String username = dto.getUsername().trim();
+            if (username.length() < 3 || username.length() > 20) {
+                throw new BusinessException("用户名长度 3-20 位");
+            }
+            if (!username.equals(current.getUsername()) && existsUsername(username)) {
+                throw new BusinessException("用户名已被占用");
+            }
+            user.setUsername(username);
+        }
         user.setPhone(dto.getPhone());
         user.setAvatar(dto.getAvatar());
+        userMapper.updateById(user);
+    }
+
+    /** 管理员改用户：真实姓名、学号/职工号、用户名、手机号都能改（唯一性各自校验） */
+    public void adminUpdateUser(Long id, SysUser dto) {
+        SysUser current = userMapper.selectById(id);
+        if (current == null) {
+            throw new BusinessException("用户不存在");
+        }
+        SysUser user = new SysUser();
+        user.setId(id);
+        if (dto.getRealName() != null && !dto.getRealName().isBlank()) {
+            user.setRealName(dto.getRealName().trim());
+        }
+        if (dto.getUserNo() != null && !dto.getUserNo().isBlank()) {
+            String userNo = dto.getUserNo().trim();
+            if (!userNo.matches(USER_NO_PATTERN)) {
+                throw new BusinessException("学号/职工号为 4-32 位字母、数字、- 或 _");
+            }
+            if (!userNo.equals(current.getUserNo()) && existsUserNo(userNo)) {
+                throw new BusinessException("该学号/职工号已存在");
+            }
+            user.setUserNo(userNo);
+        }
+        if (dto.getUsername() != null && !dto.getUsername().isBlank()) {
+            String username = dto.getUsername().trim();
+            if (username.length() < 3 || username.length() > 20) {
+                throw new BusinessException("用户名长度 3-20 位");
+            }
+            if (!username.equals(current.getUsername()) && existsUsername(username)) {
+                throw new BusinessException("用户名已被占用");
+            }
+            user.setUsername(username);
+        }
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone().trim().isEmpty() ? null : dto.getPhone().trim());
+        }
         userMapper.updateById(user);
     }
 
@@ -107,6 +189,8 @@ public class UserService {
                 .and(StringUtils.hasText(keyword), w -> w
                         .like(SysUser::getUsername, keyword)
                         .or()
+                        .like(SysUser::getUserNo, keyword)
+                        .or()
                         .like(SysUser::getRealName, keyword))
                 .eq(StringUtils.hasText(role), SysUser::getRole, role)
                 .orderByDesc(SysUser::getId);
@@ -116,6 +200,19 @@ public class UserService {
             u.setSalt(null);
         });
         return PageResult.of(page);
+    }
+
+    /** 待管理员启用的教师账号（注册后 status=0），管理端用于提醒 */
+    public List<SysUser> pendingTeachers() {
+        List<SysUser> list = userMapper.selectList(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getRole, "TEACHER")
+                .eq(SysUser::getStatus, 0)
+                .orderByDesc(SysUser::getId));
+        list.forEach(u -> {
+            u.setPassword(null);
+            u.setSalt(null);
+        });
+        return list;
     }
 
     /** 启用/禁用账号；教师注册后的审核开通也走这里 */
@@ -148,11 +245,11 @@ public class UserService {
     // ---------------- 批量导入 ----------------
 
     /** 导入模板表头，前端下载模板与后端解析共用同一套字段 */
-    public static final String IMPORT_HEADER = "用户名,真实姓名,角色,手机号,初始密码";
+    public static final String IMPORT_HEADER = "学号/职工号,用户名,真实姓名,角色,手机号,初始密码";
 
     /**
      * 批量导入用户：逐行校验，任何一行不合法只记录该行失败原因，不影响其它行。
-     * <p>列顺序：用户名,真实姓名,角色(STUDENT/TEACHER),手机号(可空),初始密码(可空，默认 123456)
+     * <p>列顺序：学号/职工号,用户名,真实姓名,角色(STUDENT/TEACHER),手机号(可空),初始密码(可空，默认 123456)
      */
     public Map<String, Object> importUsers(String rawText) {
         if (rawText == null || rawText.isBlank()) {
@@ -169,33 +266,38 @@ public class UserService {
                 continue;
             }
             // 表头行跳过
-            if (lineNo == 1 && (text.contains("用户名") || text.toLowerCase().startsWith("username"))) {
+            if (lineNo == 1 && (text.contains("学号") || text.contains("用户名")
+                    || text.toLowerCase().startsWith("username"))) {
                 continue;
             }
             String[] cols = text.split("[,，\\t]");
-            String username = cell(cols, 0);
-            String realName = cell(cols, 1);
-            String role = cell(cols, 2).toUpperCase();
-            String phone = cell(cols, 3);
-            String password = cell(cols, 4);
+            String userNo = cell(cols, 0);
+            String username = cell(cols, 1);
+            String realName = cell(cols, 2);
+            String role = cell(cols, 3).toUpperCase();
+            String phone = cell(cols, 4);
+            String password = cell(cols, 5);
             if (password.isEmpty()) {
                 password = "123456";
             }
 
-            String error = validateImport(username, realName, role, phone);
+            String error = validateImport(userNo, username, realName, role, phone);
             if (error != null) {
-                failed.add(importFail(lineNo, username, error));
+                failed.add(importFail(lineNo, userNo, error));
                 continue;
             }
-            Long exists = userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
-                    .eq(SysUser::getUsername, username));
-            if (exists != null && exists > 0) {
-                failed.add(importFail(lineNo, username, "用户名已存在"));
+            if (existsUserNo(userNo)) {
+                failed.add(importFail(lineNo, userNo, "学号/职工号已存在"));
+                continue;
+            }
+            if (existsUsername(username)) {
+                failed.add(importFail(lineNo, userNo, "用户名已存在"));
                 continue;
             }
 
             String salt = Md5Util.randomSalt();
             SysUser user = new SysUser();
+            user.setUserNo(userNo);
             user.setUsername(username);
             user.setRealName(realName);
             user.setPhone(phone.isEmpty() ? null : phone);
@@ -207,11 +309,12 @@ public class UserService {
             try {
                 userMapper.insert(user);
             } catch (Exception e) {
-                failed.add(importFail(lineNo, username, "写入失败，可能用户名重复"));
+                failed.add(importFail(lineNo, userNo, "写入失败，可能学号/职工号或用户名重复"));
                 continue;
             }
             Map<String, Object> item = new java.util.LinkedHashMap<>();
             item.put("line", lineNo);
+            item.put("userNo", userNo);
             item.put("username", username);
             item.put("realName", realName);
             item.put("role", role);
@@ -229,9 +332,9 @@ public class UserService {
     /** 导入模板（UTF-8 BOM，Excel 打开不乱码） */
     public byte[] importTemplate() {
         String sample = IMPORT_HEADER + "\r\n"
-                + "student3,张三,STUDENT,13800000005,123456\r\n"
-                + "student4,李四,STUDENT,,\r\n"
-                + "teacher3,王老师,TEACHER,13800000006,123456\r\n";
+                + "20210003,student3,张三,STUDENT,13800000005,123456\r\n"
+                + "20210004,student4,李四,STUDENT,,\r\n"
+                + "T000003,teacher3,王老师,TEACHER,13800000006,123456\r\n";
         byte[] bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
         byte[] body = sample.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         byte[] result = new byte[bom.length + body.length];
@@ -240,12 +343,18 @@ public class UserService {
         return result;
     }
 
-    private String validateImport(String username, String realName, String role, String phone) {
+    private String validateImport(String userNo, String username, String realName, String role, String phone) {
+        if (userNo.isEmpty()) {
+            return "学号/职工号不能为空";
+        }
+        if (!userNo.matches(USER_NO_PATTERN)) {
+            return "学号/职工号需为 4-32 位字母、数字、- 或 _";
+        }
         if (username.isEmpty()) {
             return "用户名不能为空";
         }
-        if (!username.matches("^[A-Za-z0-9_]{4,20}$")) {
-            return "用户名需为 4-20 位字母、数字或下划线";
+        if (username.length() < 3 || username.length() > 20) {
+            return "用户名需为 3-20 位";
         }
         if (realName.isEmpty()) {
             return "真实姓名不能为空";

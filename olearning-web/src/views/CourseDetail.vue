@@ -12,7 +12,7 @@
     <div class="layout">
       <!-- ==================== 主区 ==================== -->
       <div class="main">
-        <section class="banner" :style="{ background: coverOf(course.id) }">
+        <section class="banner" :class="{ 'has-cover': !!course.cover }" :style="coverStyle(course)">
           <div class="banner-inner">
             <div class="tags">
               <span v-if="course.categoryName" class="tag">{{ course.categoryName }}</span>
@@ -140,6 +140,9 @@
                   <div class="wk-body">
                     <b>{{ item.assignment.title }}</b>
                     <p>
+                      <template v-if="item.assignment.chapterTitle">
+                        {{ item.assignment.chapterTitle }} ·
+                      </template>
                       截止 {{ fmtTime(item.assignment.deadline) || '不限' }}
                       <template v-if="item.assignment.startTime">
                         · 开始 {{ fmtTime(item.assignment.startTime) }}
@@ -159,12 +162,20 @@
                       {{ isDone(item.state) ? '查看详情' : '去作答' }}
                     </button>
                     <button
-                      v-if="canExport"
+                      v-if="canExport && item.state !== 'NOT_START'"
                       class="wk-btn wk-btn--ghost"
                       title="导出为 docx"
-                      @click="exportWork(item)"
+                      @click.stop="exportWork(item)"
                     >
                       导出
+                    </button>
+                    <button
+                      v-if="isDone(item.state)"
+                      class="wk-btn wk-btn--ghost"
+                      title="给这次作业写笔记"
+                      @click.stop="openWorkNote(item)"
+                    >
+                      笔记
                     </button>
                   </div>
                 </div>
@@ -179,8 +190,14 @@
                     <b>{{ item.paper.title }}</b>
                     <p>
                       {{ examWindowText(item.paper) }}
-                      <template v-if="item.record?.score != null">
+                      <template v-if="item.paper.chapterTitle">
+                        · {{ item.paper.chapterTitle }}
+                      </template>
+                      <template v-if="isDone(item.state) && item.record?.score != null">
                         · 得分 {{ item.record.score }}
+                      </template>
+                      <template v-else-if="item.historyRecord">
+                        · 试卷已更新，需重新作答
                       </template>
                     </p>
                   </div>
@@ -194,12 +211,20 @@
                       {{ isDone(item.state) ? '查看成绩' : '去测验' }}
                     </button>
                     <button
-                      v-if="canExport"
+                      v-if="canExport && item.state !== 'NOT_START'"
                       class="wk-btn wk-btn--ghost"
                       title="导出为 docx"
-                      @click="exportExam(item)"
+                      @click.stop="exportExam(item)"
                     >
                       导出
+                    </button>
+                    <button
+                      v-if="isDone(item.state)"
+                      class="wk-btn wk-btn--ghost"
+                      title="给这次测验写笔记"
+                      @click.stop="openExamNote(item)"
+                    >
+                      笔记
                     </button>
                   </div>
                 </div>
@@ -294,7 +319,7 @@
           <p class="tc-desc">
             负责本课程的教学设计与答疑，课件与作业要求均可在课程内查看。有问题欢迎在讨论区发帖。
           </p>
-          <el-button text class="full" @click="router.push('/discussions')">
+          <el-button text class="full" @click="goDiscuss">
             去讨论区提问 →
           </el-button>
         </section>
@@ -303,6 +328,140 @@
 
     <!-- 课件在线预览 -->
     <FilePreview v-model="previewVisible" :rid="previewRid" />
+
+    <!-- 作业：查看详情 / 提交作答，都开在课程详情里，不跳页 -->
+    <el-dialog
+      append-to-body
+      v-model="work.visible"
+      :title="work.done ? '作业详情' : '提交作业'"
+      width="620px"
+      @closed="onWorkClosed"
+    >
+      <div v-if="work.item" class="hw-brief">
+        <div class="hw-brief-top">
+          <b>{{ work.item.assignment.title }}</b>
+          <span class="chip" :class="stateClass(work.item.state)">
+            {{ stateText(work.item.state) }}
+          </span>
+        </div>
+        <p>{{ work.item.assignment.requirement }}</p>
+        <span class="ol-muted">
+          开放 {{ fmtTime(work.item.assignment.startTime) || '不限' }} · 截止
+          {{ fmtTime(work.item.assignment.deadline) || '不限' }}
+        </span>
+        <div v-if="work.item.assignment.attachUrl" class="hw-att">
+          <el-icon><Paperclip /></el-icon>
+          <button type="button" @click="previewAttach(work.item.assignment.attachUrl)">
+            查看作业附件
+          </button>
+        </div>
+      </div>
+
+      <!-- 已提交：只读 -->
+      <div v-if="work.done" class="done-box">
+        <div class="done-line">
+          <span class="chip cs-done">已完成</span>
+          <span class="ol-muted">
+            提交于 {{ fmtTime(work.item.submission?.submitTime) }}
+          </span>
+          <span v-if="work.item.submission?.status === 1" class="chip cs-ongoing">
+            得分 {{ work.item.submission.score }} 分
+          </span>
+        </div>
+        <RichEditor
+          v-if="hasRich(work.item.submission?.content)"
+          :model-value="work.item.submission?.content || ''"
+          readonly
+          :min-height="60"
+        />
+        <p v-else class="empty-ans">（没有填写文字作答，仅提交了附件）</p>
+        <div v-if="work.item.submission?.attachUrl" class="hw-att">
+          <el-icon><Paperclip /></el-icon>
+          <button type="button" @click="previewAttach(work.item.submission.attachUrl)">
+            查看我提交的附件
+          </button>
+        </div>
+        <p v-if="work.item.submission?.comment" class="teacher-comment">
+          教师评语：{{ work.item.submission.comment }}
+        </p>
+        <p class="lock-tip">
+          <el-icon><Lock /></el-icon>
+          作业已提交，不能再次提交或修改；需要补充可以写一条作业笔记。
+        </p>
+      </div>
+
+      <!-- 未提交：作答 -->
+      <template v-else>
+        <p v-if="work.item?.state === 'EXPIRED'" class="lock-tip lock-tip--warn">
+          <el-icon><Clock /></el-icon>
+          已过截止时间，无法再提交；仍可以写一条作业笔记做小结。
+        </p>
+        <div class="form-label">我的作答</div>
+        <RichEditor
+          v-model="workForm.content"
+          :min-height="160"
+          placeholder="写下思路、结论或说明；支持加粗、列表，截图可直接粘贴"
+        />
+        <div class="form-label" style="margin-top: 14px">附件（可选）</div>
+        <div class="up-row">
+          <FileUploader label="选择文件上传" :max-size="50" @uploaded="onWorkAttach" />
+          <span v-if="workForm.attachUrl" class="att-chip">
+            <el-icon><Paperclip /></el-icon>
+            <button type="button" @click="previewAttach(workForm.attachUrl)">预览</button>
+            <button type="button" class="rm" @click="workForm.attachUrl = ''">移除</button>
+          </span>
+        </div>
+      </template>
+
+      <template #footer>
+        <el-button @click="openWorkNote(work.item)">
+          <el-icon><Notebook /></el-icon> 作业笔记
+        </el-button>
+        <el-button @click="work.visible = false">关闭</el-button>
+        <el-button
+          v-if="!work.done"
+          type="primary"
+          :disabled="work.item?.state === 'EXPIRED'"
+          :loading="workSaving"
+          @click="submitWork"
+        >
+          提交作业
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 作业 / 测验笔记 -->
+    <el-dialog append-to-body v-model="noteDialog.visible" :title="noteDialog.title" width="560px">
+      <RichEditor
+        v-model="noteDialog.content"
+        :min-height="160"
+        placeholder="记录思路、易错点；截图可直接粘贴"
+      />
+      <template #footer>
+        <el-button @click="noteDialog.visible = false">取消</el-button>
+        <el-button type="primary" :loading="noteDialog.saving" @click="saveNote">保存笔记</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 测验：原地全屏答题，关闭后仍停在课程详情 -->
+    <el-dialog
+      v-model="exam.visible"
+      fullscreen
+      append-to-body
+      :with-header="false"
+      class="exam-dialog"
+      @closed="onExamClosed"
+    >
+      <ExamView
+        v-if="exam.paperId"
+        :paper-id="exam.paperId"
+        embedded
+        @close="exam.visible = false"
+      />
+    </el-dialog>
+
+    <!-- 附件预览 -->
+    <FilePreview v-model="pv.visible" :url="pv.url" :name="pv.name" />
   </div>
 </template>
 
@@ -312,8 +471,11 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 import FilePreview from '@/components/FilePreview.vue'
+import FileUploader from '@/components/FileUploader.vue'
+import RichEditor from '@/components/RichEditor.vue'
+import ExamView from '@/views/Exam.vue'
 import { openFile, triggerDownload } from '@/utils/file'
 
 const route = useRoute()
@@ -404,17 +566,79 @@ function examWindowText(p: any) {
   return `${s || '不限'} ~ ${e || '不限'}`
 }
 
+// ---------------- 作业：原地弹窗，不再跳到学习页 ----------------
+const work = ref<any>({ visible: false, item: null, done: false })
+const workForm = ref<any>({ content: '', attachUrl: '' })
+const workSaving = ref(false)
+
 function goWork(item: any) {
   if (!userStore.isLogin) return needLogin()
   if (!course.value.enrolled) {
     ElMessage.info('选课后才能查看作业')
     return
   }
-  router.push({
-    path: `/learn/${course.value.id}`,
-    query: { work: 'assignment', id: String(item.assignment.id) }
-  })
+  const done = isDone(item.state)
+  work.value = { visible: true, item, done }
+  workForm.value = { content: '', attachUrl: '' }
+  if (!done) {
+    // 草稿：关掉弹窗也不丢，重新点开还能接着写
+    const draft = localStorage.getItem(`ol-draft:assignment:${item.assignment.id}`)
+    if (draft) {
+      try {
+        const d = JSON.parse(draft)
+        workForm.value = { content: d.content || '', attachUrl: d.attachUrl || '' }
+      } catch {
+        /* 草稿坏了就当没有 */
+      }
+    }
+  }
 }
+
+function onWorkClosed() {
+  // 未提交就关掉：把内容存成草稿，下次点开还在
+  if (!work.value.done && (workForm.value.content || workForm.value.attachUrl)) {
+    localStorage.setItem(
+      `ol-draft:assignment:${work.value.item?.assignment?.id}`,
+      JSON.stringify({ ...workForm.value, savedAt: new Date().toISOString() })
+    )
+  }
+  work.value = { visible: false, item: null, done: false }
+  loadWorks()
+}
+
+function onWorkAttach(data: { url: string }) {
+  workForm.value.attachUrl = data.url
+}
+
+async function submitWork() {
+  const item = work.value.item
+  if (!item) return
+  if (!workForm.value.content && !workForm.value.attachUrl) {
+    ElMessage.warning('请填写作答内容或上传附件')
+    return
+  }
+  workSaving.value = true
+  try {
+    await request.post(`/api/assignments/${item.assignment.id}/submit`, {
+      content: workForm.value.content,
+      attachUrl: workForm.value.attachUrl
+    })
+    ElMessage.success('作业已提交')
+    localStorage.removeItem(`ol-draft:assignment:${item.assignment.id}`)
+    work.value.visible = false
+    work.value.done = true
+    await loadWorks()
+    const fresh = works.value.assignments.find(
+      (a: any) => a.assignment.id === item.assignment.id
+    )
+    if (fresh) work.value.item = fresh
+  } finally {
+    workSaving.value = false
+  }
+}
+
+// ---------------- 测验：原地全屏弹窗 ----------------
+const exam = ref<any>({ visible: false, paperId: null as number | null })
 
 function goExam(item: any) {
   if (!userStore.isLogin) return needLogin()
@@ -422,14 +646,122 @@ function goExam(item: any) {
     ElMessage.info('选课后才能参加测验')
     return
   }
-  router.push(`/exam/${item.paper.id}`)
+  exam.value = { visible: true, paperId: item.paper.id }
+}
+
+/** 交完卷关闭弹窗后刷新一次，页面上就能看到成绩与「已完成」 */
+function onExamClosed() {
+  exam.value = { visible: false, paperId: null }
+  loadWorks()
+}
+
+// ---------------- 作业 / 测验笔记 ----------------
+const noteDialog = ref<any>({
+  visible: false,
+  title: '',
+  content: '',
+  refType: '',
+  refId: null as number | null,
+  saving: false
+})
+
+function openWorkNote(item: any) {
+  if (!userStore.isLogin) return needLogin()
+  if (!item?.assignment) return
+  noteDialog.value = {
+    visible: true,
+    title: `作业笔记 · ${item.assignment.title}`,
+    content: '',
+    refType: 'ASSIGNMENT',
+    refId: item.assignment.id,
+    saving: false
+  }
+  loadWorkNote()
+}
+
+function openExamNote(item: any) {
+  if (!userStore.isLogin) return needLogin()
+  if (!item?.paper) return
+  noteDialog.value = {
+    visible: true,
+    title: `测验笔记 · ${item.paper.title}`,
+    content: '',
+    refType: 'EXAM',
+    refId: item.paper.id,
+    saving: false
+  }
+  loadWorkNote()
+}
+
+/** 已经写过笔记就回填，避免重复建多条 */
+async function loadWorkNote() {
+  const nd = noteDialog.value
+  if (!nd.refId) return
+  const list: any = await request.get('/api/my/notes').catch(() => [])
+  const hit = (list || []).find(
+    (n: any) => n.refType === nd.refType && Number(n.refId) === Number(nd.refId)
+  )
+  if (hit) {
+    nd.content = hit.content || ''
+  }
+}
+
+async function saveNote() {
+  const nd = noteDialog.value
+  const plain = (nd.content || '')
+    .replace(/<img[^>]*>/gi, ' [图片] ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim()
+  if (!plain && !(nd.content || '').includes('<img')) {
+    ElMessage.warning('笔记内容不能为空')
+    return
+  }
+  nd.saving = true
+  try {
+    await request.post('/api/my/notes', {
+      courseId: course.value.id,
+      refType: nd.refType,
+      refId: nd.refId,
+      content: nd.content
+    })
+    ElMessage.success('笔记已保存')
+    nd.visible = false
+  } finally {
+    nd.saving = false
+  }
+}
+
+// ---------------- 附件预览 ----------------
+const pv = ref<any>({ visible: false, url: '', name: '' })
+function previewAttach(url: string) {
+  pv.value = { visible: true, url, name: '' }
+}
+
+/** 富文本里是否真的有内容（图片也算） */
+function hasRich(html: any): boolean {
+  if (!html) return false
+  const text = String(html)
+    .replace(/<img[^>]*>/gi, 'IMG')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim()
+  return text.length > 0
 }
 
 function exportWork(item: any) {
+  if (item.state === 'NOT_START') {
+    ElMessage.warning('作业尚未开始，暂不能导出')
+    return
+  }
   triggerDownload(`/api/courses/${course.value.id}/assignments/${item.assignment.id}/export`)
 }
 
 function exportExam(item: any) {
+  if (item.state === 'NOT_START') {
+    ElMessage.warning('测验尚未开放，暂不能导出')
+    return
+  }
   triggerDownload(`/api/courses/${course.value.id}/papers/${item.paper.id}/export`)
 }
 
@@ -543,6 +875,11 @@ function continueLearn() {
   router.push(`/learn/${course.value.id}`)
 }
 
+/** 带课程 id 进讨论区，那边会自动选中这门课的标签 */
+function goDiscuss() {
+  router.push({ path: '/discussions', query: { courseId: String(course.value.id) } })
+}
+
 function openChapter(ch: any) {
   if (!course.value.enrolled) {
     ElMessage.info('选课后才能进入章节学习')
@@ -611,6 +948,13 @@ onMounted(async () => {
   height: 240px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.12);
+}
+/* 有封面图时压一层暗色渐变，保证白字仍然可读 */
+.banner.has-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(28, 18, 10, 0.72) 0%, rgba(28, 18, 10, 0.34) 58%, rgba(28, 18, 10, 0.12) 100%);
 }
 .banner-inner {
   position: relative;
@@ -1064,6 +1408,116 @@ onMounted(async () => {
   color: var(--brand);
 }
 
+/* ---------- 作业弹窗 ---------- */
+.hw-brief {
+  background: var(--surface-soft);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.hw-brief-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.hw-brief-top b {
+  font-size: 14px;
+  font-weight: 650;
+}
+.hw-brief p {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: var(--ink-700);
+  white-space: pre-wrap;
+}
+.hw-brief .ol-muted {
+  font-size: 11.5px;
+}
+.hw-att {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.hw-att button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--brand);
+  font-size: 12px;
+  font-family: var(--font);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.done-box .done-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.done-box .ol-muted {
+  font-size: 11.5px;
+}
+.empty-ans {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-400);
+}
+.teacher-comment {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--ink-700);
+  background: var(--brand-50);
+  border-radius: var(--r-sm);
+  padding: 8px 11px;
+}
+.lock-tip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-400);
+}
+.lock-tip--warn {
+  color: #b4453b;
+}
+.form-label {
+  font-size: 12.5px;
+  font-weight: 620;
+  margin-bottom: 6px;
+}
+.up-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.att-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ink-500);
+}
+.att-chip button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  font-family: var(--font);
+  color: var(--brand);
+  cursor: pointer;
+}
+.att-chip .rm {
+  color: var(--ink-400);
+}
+
 /* ---------- 侧栏 ---------- */
 .side {
   display: flex;
@@ -1227,5 +1681,12 @@ onMounted(async () => {
   .gain {
     grid-template-columns: 1fr;
   }
+}
+
+/* 全屏答题弹窗：去掉内边距，让 Exam 自己撑满 */
+:deep(.exam-dialog .el-dialog__body) {
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
 }
 </style>

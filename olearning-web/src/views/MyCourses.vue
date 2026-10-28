@@ -53,8 +53,8 @@
         class="row"
         @click="c.enrollStatus === 2 ? null : router.push(`/learn/${c.id}`)"
       >
-        <div class="cover" :style="{ background: coverOf(c.id) }">
-          <span>{{ c.title.slice(0, 2) }}</span>
+        <div class="cover" :style="coverStyle(c)">
+          <span v-if="!c.cover">{{ c.title.slice(0, 2) }}</span>
           <i v-if="(c.progress || 0) >= 100" class="badge-done">
             <el-icon><CircleCheckFilled /></el-icon> 已完成
           </i>
@@ -110,7 +110,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 
 const router = useRouter()
 const list = ref<any[]>([])

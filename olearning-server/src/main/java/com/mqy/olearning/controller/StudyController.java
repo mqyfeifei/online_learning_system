@@ -60,6 +60,12 @@ public class StudyController {
         return Result.ok(studyService.myNotes(UserContext.userId(), courseId));
     }
 
+    @Operation(summary = "笔记按课程分文件夹：一门课一个文件夹")
+    @GetMapping("/my/notes/groups")
+    public Result<List<Map<String, Object>>> noteGroups() {
+        return Result.ok(studyService.noteGroups(UserContext.userId()));
+    }
+
     @Operation(summary = "新增或修改笔记，返回笔记 id")
     @PostMapping("/my/notes")
     public Result<Long> saveNote(@RequestBody StudyNote note) {

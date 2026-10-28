@@ -1,0 +1,242 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n139" name="页面-1">
+    <mxGraphModel dx="1952" dy="999" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2080" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e_user" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=22;fontStyle=1;strokeWidth=2;" value="用户" vertex="1">
+          <mxGeometry height="60" width="190" x="335" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="e_user_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;fontStyle=4;strokeWidth=2;" value="用户ID" vertex="1">
+          <mxGeometry height="46" width="144" x="432" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="n101" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_user_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_user_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="用户编号" vertex="1">
+          <mxGeometry height="46" width="144" x="510" y="129" as="geometry" />
+        </mxCell>
+        <mxCell id="n102" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_user_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_user_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="角色" vertex="1">
+          <mxGeometry height="46" width="144" x="329" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n103" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_user_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_user_a3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="账号状态" vertex="1">
+          <mxGeometry height="46" width="144" x="246" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="n104" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_user_a3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_course" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=22;fontStyle=1;strokeWidth=2;" value="课程" vertex="1">
+          <mxGeometry height="60" width="190" x="965" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="e_course_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;fontStyle=4;strokeWidth=2;" value="课程ID" vertex="1">
+          <mxGeometry height="46" width="144" x="920" y="121" as="geometry" />
+        </mxCell>
+        <mxCell id="n105" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_course_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_course_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="课程名称" vertex="1">
+          <mxGeometry height="46" width="144" x="1182" y="116" as="geometry" />
+        </mxCell>
+        <mxCell id="n106" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_course_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_course_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="课程状态" vertex="1">
+          <mxGeometry height="46" width="144" x="1220" y="177" as="geometry" />
+        </mxCell>
+        <mxCell id="n107" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_course_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_course_a3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="选课审核" vertex="1">
+          <mxGeometry height="46" width="144" x="1050" y="86" as="geometry" />
+        </mxCell>
+        <mxCell id="n108" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_course_a3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_course_a4" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="下载开关" vertex="1">
+          <mxGeometry height="46" width="144" x="1136" y="346" as="geometry" />
+        </mxCell>
+        <mxCell id="n109" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_course_a4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cat" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=22;fontStyle=1;strokeWidth=2;" value="课程分类" vertex="1">
+          <mxGeometry height="60" width="190" x="1480" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cat_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;fontStyle=4;strokeWidth=2;" value="分类ID" vertex="1">
+          <mxGeometry height="46" width="144" x="1498" y="162" as="geometry" />
+        </mxCell>
+        <mxCell id="n110" edge="1" parent="1" source="e_cat" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_cat_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cat_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="分类名称" vertex="1">
+          <mxGeometry height="46" width="144" x="1560" y="403" as="geometry" />
+        </mxCell>
+        <mxCell id="n111" edge="1" parent="1" source="e_cat" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_cat_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_cat_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="上级分类" vertex="1">
+          <mxGeometry height="46" width="144" x="1403" y="382" as="geometry" />
+        </mxCell>
+        <mxCell id="n112" edge="1" parent="1" source="e_cat" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_cat_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chap" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=22;fontStyle=1;strokeWidth=2;" value="章节" vertex="1">
+          <mxGeometry height="60" width="190" x="965" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chap_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;fontStyle=4;strokeWidth=2;" value="章节ID" vertex="1">
+          <mxGeometry height="46" width="144" x="852" y="787" as="geometry" />
+        </mxCell>
+        <mxCell id="n113" edge="1" parent="1" source="e_chap" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_chap_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chap_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="章节名称" vertex="1">
+          <mxGeometry height="46" width="144" x="1130" y="583" as="geometry" />
+        </mxCell>
+        <mxCell id="n114" edge="1" parent="1" source="e_chap" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_chap_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chap_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="排序号" vertex="1">
+          <mxGeometry height="46" width="144" x="983" y="851" as="geometry" />
+        </mxCell>
+        <mxCell id="n115" edge="1" parent="1" source="e_chap" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_chap_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_chap_a3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="内容" vertex="1">
+          <mxGeometry height="46" width="144" x="1130" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="n116" edge="1" parent="1" source="e_chap" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_chap_a3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_res" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=22;fontStyle=1;strokeWidth=2;" value="课件资源" vertex="1">
+          <mxGeometry height="60" width="190" x="1540" y="685" as="geometry" />
+        </mxCell>
+        <mxCell id="e_res_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;fontStyle=4;strokeWidth=2;" value="资源ID" vertex="1">
+          <mxGeometry height="46" width="144" x="1373" y="557" as="geometry" />
+        </mxCell>
+        <mxCell id="n117" edge="1" parent="1" source="e_res" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_res_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_res_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="资源名称" vertex="1">
+          <mxGeometry height="46" width="144" x="1503" y="526" as="geometry" />
+        </mxCell>
+        <mxCell id="n118" edge="1" parent="1" source="e_res" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_res_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_res_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="文件类型" vertex="1">
+          <mxGeometry height="46" width="144" x="1637" y="574" as="geometry" />
+        </mxCell>
+        <mxCell id="n119" edge="1" parent="1" source="e_res" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;entryX=0;entryY=1;entryDx=0;entryDy=0;" target="e_res_a2" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1783.2408746704446" y="652.2646783984237" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_note" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=22;fontStyle=1;strokeWidth=2;" value="学习笔记" vertex="1">
+          <mxGeometry height="60" width="190" x="335" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="e_note_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;fontStyle=4;strokeWidth=2;" value="笔记ID" vertex="1">
+          <mxGeometry height="46" width="144" x="400" y="687" as="geometry" />
+        </mxCell>
+        <mxCell id="n120" edge="1" parent="1" source="e_note" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_note_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_note_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="笔记标题" vertex="1">
+          <mxGeometry height="46" width="144" x="576" y="687" as="geometry" />
+        </mxCell>
+        <mxCell id="n121" edge="1" parent="1" source="e_note" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_note_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_note_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=22;strokeWidth=2;" value="内容摘要" vertex="1">
+          <mxGeometry height="46" width="144" x="607" y="603" as="geometry" />
+        </mxCell>
+        <mxCell id="n122" edge="1" parent="1" source="e_note" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=22;" target="e_note_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_teach" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="授课" vertex="1">
+          <mxGeometry height="76" width="128" x="680" y="147" as="geometry" />
+        </mxCell>
+        <mxCell id="n123" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_teach" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n124" edge="1" parent="1" source="d_teach" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_course" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_pick" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="选课" vertex="1">
+          <mxGeometry height="76" width="128" x="680" y="236" as="geometry" />
+        </mxCell>
+        <mxCell id="n125" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_pick" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n126" edge="1" parent="1" source="d_pick" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_course" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_fav" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="收藏" vertex="1">
+          <mxGeometry height="76" width="128" x="690" y="321" as="geometry" />
+        </mxCell>
+        <mxCell id="n127" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_fav" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n128" edge="1" parent="1" source="d_fav" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_course" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_belong" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="归类" vertex="1">
+          <mxGeometry height="76" width="128" x="1280" y="244" as="geometry" />
+        </mxCell>
+        <mxCell id="n129" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_belong" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n130" edge="1" parent="1" source="d_belong" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_cat" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_contain" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="包含" vertex="1">
+          <mxGeometry height="76" width="128" x="996" y="407" as="geometry" />
+        </mxCell>
+        <mxCell id="n131" edge="1" parent="1" source="e_course" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_contain" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n132" edge="1" parent="1" source="d_contain" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_chap" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_mount" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="挂载" vertex="1">
+          <mxGeometry height="76" width="128" x="1326" y="677" as="geometry" />
+        </mxCell>
+        <mxCell id="n133" edge="1" parent="1" source="e_chap" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_mount" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n134" edge="1" parent="1" source="d_mount" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="e_res" value="n">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1369.0000000000005" y="723" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d_study" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="学习" vertex="1">
+          <mxGeometry height="76" width="128" x="690" y="445" as="geometry" />
+        </mxCell>
+        <mxCell id="n135" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_study" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n136" edge="1" parent="1" source="d_study" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_chap" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d_writenote" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=22;strokeWidth=2;" value="记录" vertex="1">
+          <mxGeometry height="76" width="128" x="366" y="407" as="geometry" />
+        </mxCell>
+        <mxCell id="n137" edge="1" parent="1" source="e_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="d_writenote" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n138" edge="1" parent="1" source="d_writenote" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=22;fontColor=#333333;labelBackgroundColor=#ffffff;" target="e_note" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nt1" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=14;fontColor=#555555;whiteSpace=wrap;" value="说明：带下划线的属性为主键；菱形为联系，两端标注联系基数（1/n/m）；“选课”“学习”“收藏”为多对多联系，逻辑设计阶段各自转换为一张关联表。" vertex="1">
+          <mxGeometry height="50" width="1150" x="100" y="1150" as="geometry" />
+        </mxCell>
+        <mxCell id="Aso1dfzqqgBrqn8A5llQ-6" edge="1" parent="1" source="e_user_a0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" target="e_user_a0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

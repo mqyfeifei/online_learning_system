@@ -14,17 +14,19 @@ USE online_learning;
 -- ---------------- 1. 用户表 ----------------
 CREATE TABLE sys_user (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
-    username    VARCHAR(50)  NOT NULL COMMENT '登录名',
+    username    VARCHAR(50)  NOT NULL COMMENT '用户名（昵称，可自行修改，不用于登录）',
+    user_no     VARCHAR(32)  NOT NULL COMMENT '学号/职工号，登录用，全平台唯一',
     password    VARCHAR(64)  NOT NULL COMMENT 'MD5(明文+salt)',
     salt        VARCHAR(32)  NOT NULL COMMENT '盐',
-    real_name   VARCHAR(50)           COMMENT '真实姓名',
+    real_name   VARCHAR(50)           COMMENT '真实姓名（仅管理员可改）',
     avatar      VARCHAR(255)          COMMENT '头像地址',
     role        VARCHAR(20)  NOT NULL DEFAULT 'STUDENT' COMMENT 'STUDENT/TEACHER/ADMIN',
     phone       VARCHAR(20)           COMMENT '手机号',
     status      TINYINT      NOT NULL DEFAULT 1 COMMENT '1启用 0禁用',
     create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_username (username)
+    UNIQUE KEY uk_username (username),
+    UNIQUE KEY uk_user_no (user_no)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '用户表';
 
 -- ---------------- 2. 课程分类 ----------------
@@ -115,6 +117,7 @@ CREATE TABLE study_progress (
 CREATE TABLE assignment (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
     course_id   BIGINT       NOT NULL,
+    chapter_id  BIGINT                COMMENT '可空，精准到某一章节',
     title       VARCHAR(100) NOT NULL,
     requirement TEXT                  COMMENT '作业要求',
     attach_url  VARCHAR(255)          COMMENT '附件模板',
@@ -158,14 +161,18 @@ CREATE TABLE question (
 
 -- ---------------- 11. 试卷 ----------------
 CREATE TABLE exam_paper (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
-    course_id   BIGINT       NOT NULL,
-    title       VARCHAR(100) NOT NULL,
-    total_score INT          NOT NULL DEFAULT 100,
-    pass_score  INT          NOT NULL DEFAULT 60,
-    duration    INT          NOT NULL DEFAULT 30 COMMENT '分钟',
-    status      TINYINT      NOT NULL DEFAULT 1,
-    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id             BIGINT       NOT NULL AUTO_INCREMENT,
+    course_id      BIGINT       NOT NULL,
+    chapter_id     BIGINT                COMMENT '可空，精准到某一章节',
+    title          VARCHAR(100) NOT NULL,
+    total_score    INT          NOT NULL DEFAULT 100,
+    pass_score     INT          NOT NULL DEFAULT 60,
+    duration       INT          NOT NULL DEFAULT 30 COMMENT '分钟',
+    status         TINYINT      NOT NULL DEFAULT 1 COMMENT '1启用 0停用',
+    publish_status TINYINT      NOT NULL DEFAULT 0 COMMENT '0未发布 1已发布（学生可见）',
+    published_at   DATETIME              COMMENT '最近一次发布时间',
+    version        INT          NOT NULL DEFAULT 1 COMMENT '发布版本号，每次重新发布 +1',
+    create_time    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_course (course_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '试卷';
@@ -183,10 +190,11 @@ CREATE TABLE paper_question (
 
 -- ---------------- 13. 考试记录 ----------------
 CREATE TABLE exam_record (
-    id           BIGINT   NOT NULL AUTO_INCREMENT,
-    paper_id     BIGINT   NOT NULL,
-    user_id      BIGINT   NOT NULL,
-    answers_json TEXT              COMMENT '{"题目ID":"A,C"}',
+    id            BIGINT   NOT NULL AUTO_INCREMENT,
+    paper_id      BIGINT   NOT NULL,
+    paper_version INT      NOT NULL DEFAULT 1 COMMENT '作答时所对应试卷的发布版本',
+    user_id       BIGINT   NOT NULL,
+    answers_json  TEXT              COMMENT '{"题目ID":"A,C"}',
     score        INT               COMMENT '总分（客观题自动分 + 主观题教师分）',
     objective_score INT DEFAULT 0  COMMENT '客观题自动判分得分',
     subjective_score INT DEFAULT 0 COMMENT '主观题教师给分',
@@ -219,14 +227,26 @@ CREATE TABLE discussion_post (
     id          BIGINT       NOT NULL AUTO_INCREMENT,
     course_id   BIGINT       NOT NULL,
     user_id     BIGINT       NOT NULL,
-    title       VARCHAR(150) NOT NULL,
-    content     TEXT,
-    like_count  INT          NOT NULL DEFAULT 0,
-    status      TINYINT      NOT NULL DEFAULT 1 COMMENT '1正常 0已删除',
-    create_time DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    title         VARCHAR(150) NOT NULL,
+    content       TEXT,
+    like_count    INT          NOT NULL DEFAULT 0,
+    helpful_count INT          NOT NULL DEFAULT 0 COMMENT '有帮助数，每人只能点一次',
+    status        TINYINT      NOT NULL DEFAULT 1 COMMENT '1正常 0已删除',
+    create_time   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_course (course_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '讨论帖';
+
+-- ---------------- 15.1 帖子「有帮助」去重（v5 新增） ----------------
+CREATE TABLE discussion_helpful (
+    id          BIGINT   NOT NULL AUTO_INCREMENT,
+    post_id     BIGINT   NOT NULL COMMENT '帖子',
+    user_id     BIGINT   NOT NULL COMMENT '点「有帮助」的人',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_post_user (post_id, user_id),
+    KEY idx_post (post_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT '帖子「有帮助」去重表';
 
 -- ---------------- 15. 讨论回复 ----------------
 CREATE TABLE discussion_reply (
@@ -280,12 +300,13 @@ CREATE TABLE study_note (
 -- 密码算法：MD5(明文 + salt)，salt 统一 a1b2c3d4
 -- 123456 + a1b2c3d4 = 416a903d7521048c970c8388821b30c6
 -- ============================================================
-INSERT INTO sys_user (username, password, salt, real_name, role, phone, status) VALUES
-('admin',    '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '系统管理员', 'ADMIN',   '13800000000', 1),
-('teacher1', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '刘老师',     'TEACHER', '13800000001', 1),
-('teacher2', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '陈老师',     'TEACHER', '13800000002', 1),
-('student1', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '莫秋裕',     'STUDENT', '13800000003', 1),
-('student2', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '李同学',     'STUDENT', '13800000004', 1);
+-- 登录用 user_no（学号/职工号），密码统一 123456
+INSERT INTO sys_user (username, user_no, password, salt, real_name, role, phone, status) VALUES
+('admin',    'A000001', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '系统管理员', 'ADMIN',   '13800000000', 1),
+('teacher1', 'T000001', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '刘老师',     'TEACHER', '13800000001', 1),
+('teacher2', 'T000002', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '陈老师',     'TEACHER', '13800000002', 1),
+('student1', '20210001', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '莫秋裕',    'STUDENT', '13800000003', 1),
+('student2', '20210002', '416a903d7521048c970c8388821b30c6', 'a1b2c3d4', '李同学',    'STUDENT', '13800000004', 1);
 
 INSERT INTO course_category (name, parent_id, sort) VALUES
 ('编程语言', 0, 1),
@@ -333,8 +354,8 @@ INSERT INTO question (course_id, type, title, options_json, answer, analysis, di
  '1) 抽象类可以有构造方法与成员变量，接口以常量与抽象方法为主；2) 一个类只能继承一个抽象类，但可实现多个接口；3) 抽象类表达 is-a 关系，接口表达 has-a / 能力约定。场景：模板化流程用抽象类，跨类型能力（如 Comparable）用接口。',
  '问答题不设标准答案，教师按要点给分。', 3);
 
-INSERT INTO exam_paper (course_id, title, total_score, pass_score, duration, status) VALUES
-(1, 'Java 基础随堂测验', 100, 60, 30, 1);
+INSERT INTO exam_paper (course_id, title, total_score, pass_score, duration, status, publish_status, version, published_at) VALUES
+(1, 'Java 基础随堂测验', 100, 60, 30, 1, 1, 1, NOW());
 
 INSERT INTO paper_question (paper_id, question_id, score, sort)
 SELECT 1, id, 10, id FROM question WHERE course_id = 1;

@@ -30,8 +30,8 @@
     <!-- 课程审核卡 -->
     <div class="list">
       <article v-for="c in list" :key="c.id" class="row">
-        <div class="cover" :style="{ background: coverOf(c.id) }">
-          <span>{{ c.title }}</span>
+        <div class="cover" :style="coverStyle(c)">
+          <span v-if="!c.cover">{{ c.title }}</span>
         </div>
 
         <div class="body">
@@ -109,7 +109,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 
 const status = ref<number>(1)
 const list = ref<any[]>([])

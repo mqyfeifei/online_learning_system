@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Collectors;
 
 /**
  * 学习增强能力：课程收藏、学习笔记、学习概览统计
@@ -95,6 +96,39 @@ public class StudyService {
     }
 
     // ==================== 笔记 ====================
+
+    /**
+     * 笔记按课程分文件夹：一门课一个文件夹，带上笔记条数与最近更新时间。
+     * 课程 id 为空的笔记统一归入「未归档」，避免前端漏数据。
+     */
+    public List<Map<String, Object>> noteGroups(Long userId) {
+        List<Map<String, Object>> notes = myNotes(userId, null);
+        Map<Long, Map<String, Object>> groups = new LinkedHashMap<>();
+        for (Map<String, Object> n : notes) {
+            Long cid = (Long) n.get("courseId");
+            Map<String, Object> g = groups.get(cid);
+            if (g == null) {
+                g = new LinkedHashMap<>();
+                g.put("courseId", cid);
+                g.put("courseTitle", n.get("courseTitle"));
+                g.put("notes", new ArrayList<Map<String, Object>>());
+                g.put("lastUpdate", n.get("updateTime"));
+                groups.put(cid, g);
+            }
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> list = (List<Map<String, Object>>) g.get("notes");
+            list.add(n);
+            String t = String.valueOf(n.get("updateTime") == null ? "" : n.get("updateTime"));
+            if (t.compareTo(String.valueOf(g.get("lastUpdate"))) > 0) {
+                g.put("lastUpdate", t);
+            }
+        }
+        List<Map<String, Object>> result = new ArrayList<>(groups.values());
+        result.forEach(g -> g.put("count", ((List<?>) g.get("notes")).size()));
+        result.sort((a, b) -> String.valueOf(b.get("lastUpdate"))
+                .compareTo(String.valueOf(a.get("lastUpdate"))));
+        return result;
+    }
 
     /** 我的笔记，可按课程过滤；带课程名与章节名 */
     public List<Map<String, Object>> myNotes(Long userId, Long courseId) {

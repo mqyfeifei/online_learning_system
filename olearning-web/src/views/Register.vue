@@ -36,8 +36,7 @@
           </div>
         </div>
       </div>
-
-      <p class="bs-foot">计算机软件综合开发实训 · Spring Boot 3 + Vue 3</p>
+          <p class="bs-foot">Spring Boot 3 + Vue 3</p>
     </aside>
 
     <!-- 右侧表单 -->
@@ -61,7 +60,14 @@
         </div>
 
         <el-form :model="form" label-position="top">
-          <el-form-item label="用户名（登录用）">
+          <el-form-item :label="form.role === 'TEACHER' ? '职工号（登录用）' : '学号（登录用）'">
+            <el-input
+              v-model="form.userNo"
+              placeholder="4-32 位字母、数字、- 或 _，全平台唯一"
+              :prefix-icon="Postcard"
+            />
+          </el-form-item>
+          <el-form-item label="用户名（昵称，可随时改）">
             <el-input v-model="form.username" placeholder="3-20 位，字母或数字" :prefix-icon="User" />
           </el-form-item>
           <div class="two">
@@ -114,7 +120,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User } from '@element-plus/icons-vue'
+import { User, Postcard } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import request from '@/utils/request'
 
@@ -123,6 +129,7 @@ const userStore = useUserStore()
 
 const loading = ref(false)
 const form = reactive({
+  userNo: '',
   username: '',
   password: '',
   confirm: '',
@@ -137,8 +144,13 @@ const roles = [
 ]
 
 async function submit() {
-  if (!form.username || !form.password) {
-    ElMessage.warning('请填写用户名和密码')
+  const noLabel = form.role === 'TEACHER' ? '职工号' : '学号'
+  if (!form.userNo || !form.username || !form.password) {
+    ElMessage.warning(`请填写${noLabel}、用户名和密码`)
+    return
+  }
+  if (!/^[A-Za-z0-9_-]{4,32}$/.test(form.userNo)) {
+    ElMessage.warning(`${noLabel}为 4-32 位字母、数字、- 或 _`)
     return
   }
   if (form.username.length < 3) {
@@ -161,6 +173,7 @@ async function submit() {
   loading.value = true
   try {
     await request.post('/api/auth/register', {
+      userNo: form.userNo.trim(),
       username: form.username,
       password: form.password,
       realName: form.realName || form.username,
@@ -175,7 +188,8 @@ async function submit() {
     }
 
     // 学生账号即时可用，注册完直接登录，少一步操作
-    await userStore.login(form.username, form.password)
+    // 登录接口认的是学号（userNo），不是用户名
+    await userStore.login(form.userNo.trim(), form.password)
     ElMessage.success('注册成功，欢迎加入')
     router.replace('/')
   } finally {

@@ -19,6 +19,8 @@ public class DiscussionPost {
     private String title;
     private String content;
     private Integer likeCount;
+    /** 「有帮助」计数；每人只能点一次，去重记录在 discussion_helpful */
+    private Integer helpfulCount;
     /** 1 正常 0 已删除（管理员审核） */
     private Integer status;
     private LocalDateTime createTime;

@@ -145,7 +145,8 @@ public class EnrollmentService {
     }
 
     /**
-     * 教师导入学生名单：每行一个登录名（也允许「登录名,姓名」两列，取第一列）。
+     * 教师导入学生名单：每行一个学号（也允许「学号,姓名」两列，取第一列）。
+     * 学号匹配不到时退回按用户名匹配，兼容历史名单。
      * 返回逐行结果，前端展示成功 / 失败明细。
      */
     @Transactional
@@ -164,23 +165,21 @@ public class EnrollmentService {
             if (text.isEmpty() || text.startsWith("#")) {
                 continue;
             }
-            String username = text.split("[,，\\t;；]")[0].trim();
-            if (username.isEmpty()) {
+            String key = text.split("[,，\\t;；]")[0].trim();
+            if (key.isEmpty()) {
                 continue;
             }
-            SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
-                    .eq(SysUser::getUsername, username)
-                    .last("limit 1"));
+            SysUser user = findUser(key);
             if (user == null) {
-                failed.add(fail(lineNo, username, "账号不存在，请先让学生注册"));
+                failed.add(fail(lineNo, key, "账号不存在，请先让学生注册"));
                 continue;
             }
             if (!"STUDENT".equals(user.getRole())) {
-                failed.add(fail(lineNo, username, "该账号不是学生角色"));
+                failed.add(fail(lineNo, key, "该账号不是学生角色"));
                 continue;
             }
             if (user.getStatus() != null && user.getStatus() == 0) {
-                failed.add(fail(lineNo, username, "账号已被禁用"));
+                failed.add(fail(lineNo, key, "账号已被禁用"));
                 continue;
             }
             Enrollment exists = enrollmentMapper.selectOne(new LambdaQueryWrapper<Enrollment>()
@@ -207,7 +206,7 @@ public class EnrollmentService {
                 try {
                     enrollmentMapper.insert(enrollment);
                 } catch (DuplicateKeyException e) {
-                    failed.add(fail(lineNo, username, "并发写入冲突，请重试"));
+                    failed.add(fail(lineNo, key, "并发写入冲突，请重试"));
                     continue;
                 }
             }
@@ -235,6 +234,7 @@ public class EnrollmentService {
             result.add(Map.of(
                     "userId", e.getUserId(),
                     "username", user == null ? "" : user.getUsername(),
+                    "userNo", user == null ? "" : nullToEmpty(user.getUserNo()),
                     "realName", user == null ? "" : nullToEmpty(user.getRealName()),
                     "phone", user == null ? "" : nullToEmpty(user.getPhone()),
                     "progress", vo.getProgress() == null ? 0 : vo.getProgress(),
@@ -280,10 +280,24 @@ public class EnrollmentService {
         return item;
     }
 
+    /** 按学号查，查不到再按用户名查（兼容旧名单） */
+    private SysUser findUser(String key) {
+        SysUser user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUserNo, key)
+                .last("limit 1"));
+        if (user == null) {
+            user = userMapper.selectOne(new LambdaQueryWrapper<SysUser>()
+                    .eq(SysUser::getUsername, key)
+                    .last("limit 1"));
+        }
+        return user;
+    }
+
     private Map<String, Object> row(int line, SysUser user) {
         Map<String, Object> item = new LinkedHashMap<>();
         item.put("line", line);
         item.put("username", user.getUsername());
+        item.put("userNo", nullToEmpty(user.getUserNo()));
         item.put("realName", nullToEmpty(user.getRealName()));
         return item;
     }

@@ -58,9 +58,18 @@
             <label>章节序号</label>
             <b>{{ current.sort }}</b>
           </div>
-          <div class="field">
-            <label>视频地址</label>
-            <span class="mono">{{ current.videoUrl || '未设置' }}</span>
+          <div class="field field--block">
+            <label>章节视频</label>
+            <!-- 有视频就直接给出播放器，教师能确认上传的到底是不是对的片子 -->
+            <video
+              v-if="current.videoUrl"
+              :src="withToken(current.videoUrl)"
+              controls
+              preload="metadata"
+              class="chapter-video"
+            />
+            <span v-else class="mono">未设置</span>
+            <span v-if="current.videoUrl" class="mono video-url">{{ current.videoUrl }}</span>
           </div>
           <div class="field field--block">
             <label>章节内容</label>
@@ -81,15 +90,23 @@
         </div>
 
         <div class="file-list">
-          <div v-for="f in currentFiles" :key="f.id" class="file">
-            <span class="fico" :class="`type-${(f.fileType || '').slice(0, 4)}`">
+          <div v-for="f in currentFiles" :key="f.id" class="file" :class="{ 'file--media': isVideo(f) }">
+            <video
+              v-if="isVideo(f)"
+              :src="withToken(f.fileUrl)"
+              preload="metadata"
+              muted
+              class="vid-thumb"
+              @click="openPreview(f)"
+            />
+            <span v-else class="fico" :class="`type-${(f.fileType || '').slice(0, 4)}`">
               {{ (f.fileType || 'FILE').toUpperCase().slice(0, 4) }}
             </span>
             <div class="fbody">
               <b>{{ f.name }}</b>
               <span>{{ sizeText(f.fileSize) }}</span>
             </div>
-            <button class="fop" @click="openPreview(f)">预览</button>
+            <button class="fop" @click="openPreview(f)">{{ isVideo(f) ? '播放' : '预览' }}</button>
             <button class="fop" @click="downloadFile(f)">下载</button>
             <button class="fop danger" @click="removeFile(f)">删除</button>
           </div>
@@ -110,15 +127,23 @@
           />
         </div>
         <div class="file-list">
-          <div v-for="f in courseLevelFiles" :key="f.id" class="file">
-            <span class="fico" :class="`type-${(f.fileType || '').slice(0, 4)}`">
+          <div v-for="f in courseLevelFiles" :key="f.id" class="file" :class="{ 'file--media': isVideo(f) }">
+            <video
+              v-if="isVideo(f)"
+              :src="withToken(f.fileUrl)"
+              preload="metadata"
+              muted
+              class="vid-thumb"
+              @click="openPreview(f)"
+            />
+            <span v-else class="fico" :class="`type-${(f.fileType || '').slice(0, 4)}`">
               {{ (f.fileType || 'FILE').toUpperCase().slice(0, 4) }}
             </span>
             <div class="fbody">
               <b>{{ f.name }}</b>
               <span>{{ sizeText(f.fileSize) }}</span>
             </div>
-            <button class="fop" @click="openPreview(f)">预览</button>
+            <button class="fop" @click="openPreview(f)">{{ isVideo(f) ? '播放' : '预览' }}</button>
             <button class="fop" @click="downloadFile(f)">下载</button>
             <button class="fop danger" @click="removeFile(f)">删除</button>
           </div>
@@ -186,7 +211,14 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 import FileUploader from '@/components/FileUploader.vue'
 import FilePreview from '@/components/FilePreview.vue'
-import { openFile } from '@/utils/file'
+import { openFile, withToken } from '@/utils/file'
+
+const VIDEO_TYPES = ['mp4', 'webm', 'ogg', 'mov', 'm4v']
+
+/** 视频课件：列表里直接渲染缩略画面，教师一眼能确认上传的是不是对的片子 */
+function isVideo(f: any) {
+  return VIDEO_TYPES.includes(String(f?.fileType || '').toLowerCase())
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -414,6 +446,32 @@ onMounted(load)
 }
 .field--block {
   grid-column: 1 / -1;
+}
+.chapter-video {
+  width: 100%;
+  max-width: 560px;
+  border-radius: var(--r-sm);
+  background: #000;
+  display: block;
+}
+.video-url {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink-300);
+}
+/* 视频课件：缩略画面比文件类型角标直观得多 */
+.vid-thumb {
+  width: 64px;
+  height: 40px;
+  flex: none;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #000;
+  cursor: pointer;
+}
+.file--media {
+  padding: 6px 12px;
 }
 .content {
   margin: 0;

@@ -3,10 +3,12 @@ package com.mqy.olearning.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.mqy.olearning.common.BusinessException;
 import com.mqy.olearning.entity.Assignment;
+import com.mqy.olearning.entity.Chapter;
 import com.mqy.olearning.entity.Course;
 import com.mqy.olearning.entity.Submission;
 import com.mqy.olearning.entity.SysUser;
 import com.mqy.olearning.mapper.AssignmentMapper;
+import com.mqy.olearning.mapper.ChapterMapper;
 import com.mqy.olearning.mapper.CourseMapper;
 import com.mqy.olearning.mapper.SubmissionMapper;
 import com.mqy.olearning.mapper.SysUserMapper;
@@ -30,6 +32,7 @@ public class AssignmentService {
     private final AssignmentMapper assignmentMapper;
     private final SubmissionMapper submissionMapper;
     private final CourseMapper courseMapper;
+    private final ChapterMapper chapterMapper;
     private final SysUserMapper userMapper;
     private final EnrollmentService enrollmentService;
 
@@ -39,6 +42,7 @@ public class AssignmentService {
                 .orderByDesc(Assignment::getCreateTime));
         List<Map<String, Object>> result = new ArrayList<>();
         for (Assignment a : list) {
+            a.setChapterTitle(chapterTitle(a.getChapterId()));
             Map<String, Object> item = new HashMap<>();
             item.put("assignment", a);
             Submission sub = null;
@@ -192,6 +196,15 @@ public class AssignmentService {
             ));
         }
         return result;
+    }
+
+    /** 作业挂在某一章节时返回章节标题，没挂章节返回空串（表示整门课） */
+    private String chapterTitle(Long chapterId) {
+        if (chapterId == null) {
+            return "";
+        }
+        Chapter chapter = chapterMapper.selectById(chapterId);
+        return chapter == null ? "" : chapter.getTitle();
     }
 
     private void checkOwner(Long courseId, Long teacherId) {

@@ -14,7 +14,10 @@ public class SysUser {
 
     @TableId(type = IdType.AUTO)
     private Long id;
+    /** 用户名（昵称），学生可自行修改；登录不用它 */
     private String username;
+    /** 学号 / 职工号：登录账号，全平台唯一 */
+    private String userNo;
     /** 存储的是 MD5(明文 + salt)，不存明文 */
     private String password;
     private String salt;

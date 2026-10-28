@@ -201,80 +201,168 @@
         </div>
       </section>
 
-      <!-- 测验 -->
-      <section v-if="papers.length" class="p-card">
+      <!-- 测验：挂在本章的优先，其次是整门课程通用的 -->
+      <section v-if="chapterPapers.length || coursePapers.length" class="p-card">
         <div class="p-title">
           <h3>本章测验</h3>
           <button class="mini-link" @click="router.push(`/courses/${courseId}?tab=works`)">
             全部作业与测验 →
           </button>
         </div>
-        <div v-for="p in papers" :key="p.id" class="task-row" @click="router.push(`/exam/${p.id}`)">
-          <span class="task-ico task-ico--violet"><el-icon><EditPen /></el-icon></span>
-          <div class="task-body">
-            <b>{{ p.title }}</b>
-            <p>{{ p.totalScore }} 分 · {{ p.duration }} 分钟</p>
-          </div>
-          <button
-            v-if="canExport"
-            class="mini-act mini-act--label"
-            title="导出试卷（docx）"
-            @click.stop="exportPaper(p)"
+        <template v-if="chapterPapers.length">
+          <div
+            v-for="p in chapterPapers"
+            :key="p.id"
+            class="task-row"
+            :class="{ 'is-locked': paperNotOpen(p) }"
+            @click="openPaper(p)"
           >
-            <el-icon><Download /></el-icon><em>导出</em>
-          </button>
-          <el-icon class="task-arrow"><ArrowRight /></el-icon>
-        </div>
-      </section>
-
-      <!-- 作业 -->
-      <section v-if="assignments.length" class="p-card">
-        <div class="p-title">
-          <h3>课程作业</h3>
-          <span class="ol-muted">已完成 {{ doneCount }}/{{ assignments.length }}</span>
-        </div>
-        <div
-          v-for="item in assignments"
-          :key="item.assignment.id"
-          class="task-row task-row--stack"
-          :class="{ 'is-done': isDone(item.state) }"
-          @click="openSubmit(item)"
-        >
-          <span class="task-ico task-ico--amber"><el-icon><Document /></el-icon></span>
-          <div class="task-body">
-            <b>{{ item.assignment.title }}</b>
-            <p>
-              <span class="chip" :class="stateClass(item.state)">{{ stateText(item.state) }}</span>
-              <template v-if="item.state === 'SUBMITTED'">已提交，等待批阅</template>
-              <template v-else-if="item.state === 'GRADED'">
-                得分 {{ item.submission?.score }} 分
-              </template>
-              <template v-else-if="item.state === 'NOT_START'">
-                {{ fmt(item.assignment.startTime) }} 开放
-              </template>
-              <template v-else-if="item.state === 'EXPIRED'">已截止</template>
-              <template v-else>截止 {{ fmt(item.assignment.deadline) }}</template>
-            </p>
-          </div>
-          <el-icon class="task-arrow"><ArrowRight /></el-icon>
-          <div class="task-acts">
+            <span class="task-ico task-ico--violet"><el-icon><EditPen /></el-icon></span>
+            <div class="task-body">
+              <b>{{ p.title }}</b>
+              <p>
+                {{ p.totalScore }} 分 · {{ p.duration }} 分钟
+                <template v-if="paperNotOpen(p)"> · {{ fmt(p.startTime) }} 开放</template>
+              </p>
+            </div>
             <button
-              v-if="canExport"
+              v-if="canExport && !paperNotOpen(p)"
               class="mini-act mini-act--label"
-              title="导出作业（docx）"
-              @click.stop="exportAssignment(item)"
+              title="导出试卷（docx）"
+              @click.stop="exportPaper(p)"
             >
               <el-icon><Download /></el-icon><em>导出</em>
             </button>
-            <button
-              class="mini-act mini-act--label"
-              title="给这次作业添加笔记"
-              @click.stop="openWorkNote(item)"
-            >
-              <el-icon><Notebook /></el-icon><em>笔记</em>
-            </button>
+            <el-icon v-if="!paperNotOpen(p)" class="task-arrow"><ArrowRight /></el-icon>
           </div>
+        </template>
+        <p v-else class="ol-muted sm">本章没有随堂测验</p>
+        <template v-if="coursePapers.length">
+          <div class="sub-title">课程测验</div>
+          <div
+            v-for="p in coursePapers"
+            :key="p.id"
+            class="task-row"
+            :class="{ 'is-locked': paperNotOpen(p) }"
+            @click="openPaper(p)"
+          >
+            <span class="task-ico task-ico--violet"><el-icon><EditPen /></el-icon></span>
+            <div class="task-body">
+              <b>{{ p.title }}</b>
+              <p>
+                {{ p.totalScore }} 分 · {{ p.duration }} 分钟
+                <template v-if="paperNotOpen(p)"> · {{ fmt(p.startTime) }} 开放</template>
+              </p>
+            </div>
+            <button
+              v-if="canExport && !paperNotOpen(p)"
+              class="mini-act mini-act--label"
+              title="导出试卷（docx）"
+              @click.stop="exportPaper(p)"
+            >
+              <el-icon><Download /></el-icon><em>导出</em>
+            </button>
+            <el-icon v-if="!paperNotOpen(p)" class="task-arrow"><ArrowRight /></el-icon>
+          </div>
+        </template>
+      </section>
+
+      <!-- 作业 -->
+      <section v-if="chapterAssignments.length || courseAssignments.length" class="p-card">
+        <div class="p-title">
+          <h3>本章作业</h3>
+          <span class="ol-muted">已完成 {{ doneCount }}/{{ assignments.length }}</span>
         </div>
+        <template v-if="chapterAssignments.length">
+          <div
+            v-for="item in chapterAssignments"
+            :key="item.assignment.id"
+            class="task-row task-row--stack"
+            :class="{ 'is-done': isDone(item.state), 'is-locked': item.state === 'NOT_START' }"
+            @click="openWork(item)"
+          >
+            <span class="task-ico task-ico--amber"><el-icon><Document /></el-icon></span>
+            <div class="task-body">
+              <b>{{ item.assignment.title }}</b>
+              <p>
+                <span class="chip" :class="stateClass(item.state)">{{ stateText(item.state) }}</span>
+                <template v-if="item.state === 'SUBMITTED'">已提交，等待批阅</template>
+                <template v-else-if="item.state === 'GRADED'">
+                  得分 {{ item.submission?.score }} 分
+                </template>
+                <template v-else-if="item.state === 'NOT_START'">
+                  {{ fmt(item.assignment.startTime) }} 开放
+                </template>
+                <template v-else-if="item.state === 'EXPIRED'">已截止</template>
+                <template v-else>截止 {{ fmt(item.assignment.deadline) }}</template>
+              </p>
+            </div>
+            <el-icon v-if="item.state !== 'NOT_START'" class="task-arrow"><ArrowRight /></el-icon>
+            <div class="task-acts">
+              <button
+                v-if="canExport && item.state !== 'NOT_START'"
+                class="mini-act mini-act--label"
+                title="导出作业（docx）"
+                @click.stop="exportAssignment(item)"
+              >
+                <el-icon><Download /></el-icon><em>导出</em>
+              </button>
+              <button
+                class="mini-act mini-act--label"
+                title="给这次作业添加笔记"
+                @click.stop="openWorkNote(item)"
+              >
+                <el-icon><Notebook /></el-icon><em>笔记</em>
+              </button>
+            </div>
+          </div>
+        </template>
+        <p v-else class="ol-muted sm">本章没有随堂作业</p>
+        <template v-if="courseAssignments.length">
+          <div class="sub-title">课程作业</div>
+          <div
+            v-for="item in courseAssignments"
+            :key="item.assignment.id"
+            class="task-row task-row--stack"
+            :class="{ 'is-done': isDone(item.state), 'is-locked': item.state === 'NOT_START' }"
+            @click="openWork(item)"
+          >
+            <span class="task-ico task-ico--amber"><el-icon><Document /></el-icon></span>
+            <div class="task-body">
+              <b>{{ item.assignment.title }}</b>
+              <p>
+                <span class="chip" :class="stateClass(item.state)">{{ stateText(item.state) }}</span>
+                <template v-if="item.state === 'SUBMITTED'">已提交，等待批阅</template>
+                <template v-else-if="item.state === 'GRADED'">
+                  得分 {{ item.submission?.score }} 分
+                </template>
+                <template v-else-if="item.state === 'NOT_START'">
+                  {{ fmt(item.assignment.startTime) }} 开放
+                </template>
+                <template v-else-if="item.state === 'EXPIRED'">已截止</template>
+                <template v-else>截止 {{ fmt(item.assignment.deadline) }}</template>
+              </p>
+            </div>
+            <el-icon v-if="item.state !== 'NOT_START'" class="task-arrow"><ArrowRight /></el-icon>
+            <div class="task-acts">
+              <button
+                v-if="canExport && item.state !== 'NOT_START'"
+                class="mini-act mini-act--label"
+                title="导出作业（docx）"
+                @click.stop="exportAssignment(item)"
+              >
+                <el-icon><Download /></el-icon><em>导出</em>
+              </button>
+              <button
+                class="mini-act mini-act--label"
+                title="给这次作业添加笔记"
+                @click.stop="openWorkNote(item)"
+              >
+                <el-icon><Notebook /></el-icon><em>笔记</em>
+              </button>
+            </div>
+          </div>
+        </template>
       </section>
     </aside>
 
@@ -450,6 +538,24 @@ const doneCount = computed(
 )
 
 /**
+ * 教师创建作业/测验时可以挂到某一章节，也可以只挂到课程。
+ * 章节学习页因此分成两组展示：挂在当前章节的 + 整门课程通用的，
+ * 挂到别的章节的不在这里出现，避免跨章节串场。
+ */
+const chapterAssignments = computed(() =>
+  assignments.value.filter(
+    (a) => a.assignment?.chapterId && a.assignment.chapterId === current.value?.id
+  )
+)
+const courseAssignments = computed(() =>
+  assignments.value.filter((a) => !a.assignment?.chapterId)
+)
+const chapterPapers = computed(() =>
+  papers.value.filter((p) => p.chapterId && p.chapterId === current.value?.id)
+)
+const coursePapers = computed(() => papers.value.filter((p) => !p.chapterId))
+
+/**
  * 教师可在课程设置里控制作业/试卷导出的范围：
  * NONE 不开放 / ENROLLED 仅选课学生 / ALL 平台用户。
  * 学生端据此决定是否显示导出按钮，避免点了才报错。
@@ -569,15 +675,46 @@ function isDone(state?: string) {
   return state === 'SUBMITTED' || state === 'GRADED'
 }
 
+/** 测验是否还没到开放时间（start_time 为空表示不限） */
+function paperNotOpen(p: any): boolean {
+  return !!p?.startTime && new Date(p.startTime).getTime() > Date.now()
+}
+
+/** 未开放的测验不允许进入作答页 */
+function openPaper(p: any) {
+  if (paperNotOpen(p)) {
+    ElMessage.info(`测验将于 ${fmt(p.startTime)} 开放，到时间后才能作答`)
+    return
+  }
+  router.push(`/exam/${p.id}`)
+}
+
+/** 未开始的作业不允许点进提交弹窗 */
+function openWork(item: any) {
+  if (item.state === 'NOT_START') {
+    ElMessage.info(`作业将于 ${fmt(item.assignment.startTime)} 开放，到时间后才能作答`)
+    return
+  }
+  openSubmit(item)
+}
+
 function onAttach(data: any) {
   submitForm.value.attachUrl = data.url
 }
 
 // ---------------- 导出 ----------------
 function exportAssignment(item: any) {
+  if (item.state === 'NOT_START') {
+    ElMessage.warning('作业尚未开始，暂不能导出')
+    return
+  }
   triggerDownload(`/api/courses/${courseId}/assignments/${item.assignment.id}/export`)
 }
 function exportPaper(p: any) {
+  if (paperNotOpen(p)) {
+    ElMessage.warning('测验尚未开放，暂不能导出')
+    return
+  }
   triggerDownload(`/api/courses/${courseId}/papers/${p.id}/export`)
 }
 
@@ -658,7 +795,7 @@ async function load() {
     if (route.query.work === 'assignment') {
       const wantId = Number(route.query.id)
       const hit = assignments.value.find((a: any) => a.assignment?.id === wantId)
-      if (hit) openSubmit(hit)
+      if (hit) openWork(hit)
       else ElMessage.info('未找到该作业')
     }
   } finally {
@@ -1196,6 +1333,15 @@ onMounted(load)
   font-size: 13.5px;
   font-weight: 680;
 }
+/* 同一张卡片里区分「本章」与「课程级」作业/测验的小标题 */
+.sub-title {
+  margin: 10px 0 2px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--ink-100);
+  font-size: 11.5px;
+  font-weight: 640;
+  color: var(--ink-400);
+}
 .p-title b {
   font-size: 15px;
   font-weight: 750;
@@ -1298,6 +1444,17 @@ onMounted(load)
 }
 .task-row:hover {
   background: var(--surface-sunken);
+}
+/* 未开放 / 未开始的测验、作业：整体弱化，提示还不能点进去 */
+.task-row.is-locked {
+  cursor: default;
+  opacity: 0.66;
+}
+.task-row.is-locked:hover {
+  background: transparent;
+}
+.task-row.is-locked .task-ico {
+  filter: grayscale(0.4);
 }
 .task-ico {
   width: 30px;

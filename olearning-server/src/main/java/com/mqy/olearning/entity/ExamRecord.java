@@ -15,6 +15,8 @@ public class ExamRecord {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long paperId;
+    /** 作答时试卷的发布版本；试卷重新发布后旧答卷作废但保留 */
+    private Integer paperVersion;
     private Long userId;
     /** 学生答案 JSON：{"题目ID":"A,C"} */
     private String answersJson;

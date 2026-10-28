@@ -65,8 +65,8 @@
               class="continue-item"
               @click="go(`/learn/${c.id}`)"
             >
-              <div class="thumb" :style="{ background: coverOf(c.id) }">
-                {{ c.title.slice(0, 2) }}
+              <div class="thumb" :style="coverStyle(c)">
+                <template v-if="!c.cover">{{ c.title.slice(0, 2) }}</template>
               </div>
               <div class="ci-body">
                 <div class="ci-top">
@@ -101,8 +101,8 @@
               class="course-card"
               @click="go(`/courses/${c.id}`)"
             >
-              <div class="cc-cover" :style="{ background: coverOf(c.id) }">
-                <span>{{ c.title }}</span>
+              <div class="cc-cover" :style="coverStyle(c)">
+                <span v-if="!c.cover">{{ c.title }}</span>
                 <i v-if="c.categoryName" class="cc-tag">{{ c.categoryName }}</i>
               </div>
               <div class="cc-body">
@@ -227,7 +227,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 
 const router = useRouter()
 const userStore = useUserStore()

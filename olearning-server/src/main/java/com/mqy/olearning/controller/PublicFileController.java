@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -66,7 +67,7 @@ public class PublicFileController {
                                                @RequestParam(required = false) String name) {
         Target target = resolveTarget(rid, url, name);
         File file = fileService.resolve(target.fileUrl());
-        String ext = fileService.extOf(target.name());
+        String ext = extOf(target);
 
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("name", target.name());
@@ -107,7 +108,7 @@ public class PublicFileController {
         File file = fileService.resolve(target.fileUrl());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename*=UTF-8''" + encode(target.name()))
-                .contentType(mediaType(target.name()))
+                .contentType(mediaType(extOf(target)))
                 .body(new FileSystemResource(file));
     }
 
@@ -190,12 +191,22 @@ public class PublicFileController {
         }
     }
 
+    /** 展示名可能没有扩展名（如「第 1 章 概述」），取不到时回退用文件地址里的扩展名 */
+    private String extOf(Target target) {
+        String ext = fileService.extOf(target.name());
+        if (StringUtils.hasText(ext)) {
+            return ext;
+        }
+        return fileService.extOf(target.fileUrl());
+    }
+
     private String encode(String name) {
         return URLEncoder.encode(name == null ? "file" : name, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private MediaType mediaType(String name) {
-        String ext = fileService.extOf(name);
+        // 入参可能是完整文件名（xx.pdf）也可能是纯扩展名（pdf），统一成扩展名再判断
+        String ext = name.contains(".") ? fileService.extOf(name) : name;
         return switch (ext) {
             case "pdf" -> MediaType.APPLICATION_PDF;
             case "png" -> MediaType.IMAGE_PNG;

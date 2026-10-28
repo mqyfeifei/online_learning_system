@@ -6,8 +6,9 @@ import lombok.Data;
 @Data
 public class LoginDTO {
 
-    @NotBlank(message = "用户名不能为空")
-    private String username;
+    /** 登录账号 = 学号 / 职工号 */
+    @NotBlank(message = "请输入学号或职工号")
+    private String account;
 
     @NotBlank(message = "密码不能为空")
     private String password;

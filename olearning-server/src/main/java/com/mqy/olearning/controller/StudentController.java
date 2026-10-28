@@ -118,10 +118,10 @@ public class StudentController {
 
     // ---------------- 测验 ----------------
 
-    @Operation(summary = "课程可参加的试卷列表")
+    @Operation(summary = "课程可参加的试卷列表（只返回教师已发布的）")
     @GetMapping("/courses/{courseId}/papers")
     public Result<List<ExamPaper>> papers(@PathVariable Long courseId) {
-        return Result.ok(examService.papers(courseId));
+        return Result.ok(examService.publishedPapers(courseId));
     }
 
     @Operation(summary = "开始答题（不含答案）")
@@ -136,10 +136,10 @@ public class StudentController {
         return Result.ok(examService.submit(UserContext.userId(), dto));
     }
 
-    @Operation(summary = "我的考试记录")
+    @Operation(summary = "我的考试记录（可按课程筛选，带课程与章节信息）")
     @GetMapping("/my/records")
-    public Result<List<Map<String, Object>>> myRecords() {
-        return Result.ok(examService.myRecords(UserContext.userId()));
+    public Result<List<Map<String, Object>>> myRecords(@RequestParam(required = false) Long courseId) {
+        return Result.ok(examService.myRecords(UserContext.userId(), courseId));
     }
 
     @Operation(summary = "答卷详情与错题解析")
@@ -175,6 +175,16 @@ public class StudentController {
     public Result<Void> like(@PathVariable Long postId) {
         discussionService.like(postId);
         return Result.ok();
+    }
+
+    @Operation(summary = "标记「有帮助」，每人每帖只能点一次")
+    @PostMapping("/discussions/{postId}/helpful")
+    public Result<Map<String, Object>> helpful(@PathVariable Long postId) {
+        boolean added = discussionService.helpful(postId, UserContext.userId());
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("added", added);
+        data.put("message", added ? "已标记为有帮助" : "你已经点过有帮助了");
+        return Result.ok(data);
     }
 
     @Operation(summary = "删除自己的帖子")

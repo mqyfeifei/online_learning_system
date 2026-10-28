@@ -4,6 +4,9 @@ import request from '@/utils/request'
 
 export interface UserInfo {
   id: number
+  /** 学号 / 职工号，登录账号 */
+  userNo: string
+  /** 用户名（昵称，可改） */
   username: string
   realName: string
   role: string
@@ -19,8 +22,9 @@ export const useUserStore = defineStore('user', () => {
   const isLogin = computed(() => !!token.value)
   const role = computed(() => userInfo.value?.role || '')
 
-  async function login(username: string, password: string) {
-    const data: any = await request.post('/api/auth/login', { username, password })
+  /** 登录用学号/职工号，不用用户名 */
+  async function login(account: string, password: string) {
+    const data: any = await request.post('/api/auth/login', { account, password })
     token.value = data.token
     userInfo.value = data
     localStorage.setItem('token', data.token)

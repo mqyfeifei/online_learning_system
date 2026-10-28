@@ -26,8 +26,8 @@
           class="fav-card"
           @click="router.push(`/courses/${c.id}`)"
         >
-          <div class="fc-cover" :style="{ background: coverOf(c.id) }">
-            <span>{{ c.title }}</span>
+          <div class="fc-cover" :style="coverStyle(c)">
+            <span v-if="!c.cover">{{ c.title }}</span>
             <button class="unfav" title="取消收藏" @click.stop="removeFav(c)">
               <el-icon><StarFilled /></el-icon>
             </button>
@@ -52,30 +52,70 @@
       </div>
     </div>
 
-    <!-- ==================== 笔记 ==================== -->
+    <!-- ==================== 笔记（按课程分文件夹） ==================== -->
     <div v-else v-loading="loadingNote">
-      <div v-if="notes.length" class="note-grid">
-        <article v-for="n in notes" :key="n.id" class="note-card">
-          <div class="nc-top">
-            <span class="chip chip--brand">{{ n.courseTitle }}</span>
-            <span v-if="n.chapterTitle" class="nc-ch">{{ n.chapterTitle }}</span>
-            <span v-if="n.refType" class="chip chip--violet">{{ refName(n.refType) }}</span>
-          </div>
-          <h3>{{ n.title }}</h3>
-          <div class="nc-body" v-html="n.content" />
-          <div class="nc-foot">
-            <span class="ol-muted">{{ fmt(n.updateTime) }}</span>
-            <div class="nc-ops">
-              <button @click="openEditor(n)">编辑</button>
-              <button class="danger" @click="removeNote(n)">删除</button>
+      <!-- 文件夹视图 -->
+      <template v-if="openGroup === null">
+        <div v-if="groups.length" class="folder-grid">
+          <article
+            v-for="g in groups"
+            :key="String(g.courseId)"
+            class="folder"
+            @click="openGroup = g.courseId"
+          >
+            <span class="fd-ico" :style="{ background: coverOf(g.courseId) }">
+              <el-icon><FolderOpened /></el-icon>
+            </span>
+            <div class="fd-body">
+              <b>{{ g.courseTitle || '未归档' }}</b>
+              <span>{{ g.count }} 条笔记 · 最近 {{ fmt(g.lastUpdate) }}</span>
             </div>
-          </div>
-        </article>
-      </div>
-      <div v-else class="ol-empty ol-card">
-        <span class="icon">📝</span>
-        还没有笔记，学习页右侧可以随手记录
-      </div>
+            <el-icon class="fd-arrow"><ArrowRight /></el-icon>
+          </article>
+        </div>
+        <div v-else class="ol-empty ol-card">
+          <span class="icon">📝</span>
+          还没有笔记，学习页右侧可以随手记录
+        </div>
+      </template>
+
+      <!-- 文件夹内：这门课的笔记 -->
+      <template v-else>
+        <div class="fd-head">
+          <button class="fd-back" @click="openGroup = null">
+            <el-icon><ArrowLeft /></el-icon> 全部文件夹
+          </button>
+          <h2>{{ currentGroup?.courseTitle || '未归档' }}</h2>
+          <span class="ol-muted">{{ currentNotes.length }} 条</span>
+          <span class="grow" />
+          <el-button
+            type="primary"
+            size="small"
+            @click="openEditor(undefined, currentGroup?.courseId)"
+          >
+            <el-icon><Plus /></el-icon> 在这门课下新建
+          </el-button>
+        </div>
+
+        <div v-if="currentNotes.length" class="note-grid">
+          <article v-for="n in currentNotes" :key="n.id" class="note-card">
+            <div class="nc-top">
+              <span v-if="n.chapterTitle" class="chip">{{ n.chapterTitle }}</span>
+              <span v-if="n.refType" class="chip chip--violet">{{ refName(n.refType) }}</span>
+            </div>
+            <h3>{{ n.title }}</h3>
+            <div class="nc-body" v-html="n.content" />
+            <div class="nc-foot">
+              <span class="ol-muted">{{ fmt(n.updateTime) }}</span>
+              <div class="nc-ops">
+                <button @click="openEditor(n)">编辑</button>
+                <button class="danger" @click="removeNote(n)">删除</button>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div v-else class="ol-empty ol-card">这个文件夹还没有笔记</div>
+      </template>
     </div>
 
     <!-- 编辑弹窗 -->
@@ -106,11 +146,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 import RichEditor from '@/components/RichEditor.vue'
 
 const router = useRouter()
@@ -118,7 +158,15 @@ const router = useRouter()
 const tab = ref<'fav' | 'note'>('fav')
 const favorites = ref<any[]>([])
 const notes = ref<any[]>([])
+/** 笔记按课程分文件夹：groups 是文件夹，openGroup 是当前打开的课程 id */
+const groups = ref<any[]>([])
+const openGroup = ref<number | null>(null)
 const myCourses = ref<any[]>([])
+
+const currentGroup = computed(() =>
+  groups.value.find((g) => g.courseId === openGroup.value) || null
+)
+const currentNotes = computed(() => currentGroup.value?.notes || [])
 const loadingFav = ref(false)
 const loadingNote = ref(false)
 
@@ -158,10 +206,16 @@ async function loadFav() {
   }
 }
 
+/** 一次拿「按课程分好的文件夹」，顺带把平铺列表也留着给新建笔记用 */
 async function loadNotes() {
   loadingNote.value = true
   try {
-    notes.value = ((await request.get('/api/my/notes')) as any) || []
+    groups.value = ((await request.get('/api/my/notes/groups')) as any) || []
+    notes.value = groups.value.flatMap((g: any) => g.notes || [])
+    // 文件夹被删掉（课程没了）时退回文件夹视图，避免停在空白页
+    if (openGroup.value !== null && !groups.value.some((g) => g.courseId === openGroup.value)) {
+      openGroup.value = null
+    }
   } finally {
     loadingNote.value = false
   }
@@ -173,7 +227,8 @@ async function removeFav(c: any) {
   loadFav()
 }
 
-function openEditor(n?: any) {
+/** courseId 不传时用在学课程里的第一门，传了就直接在当前文件夹下新建 */
+function openEditor(n?: any, courseId?: number | null) {
   if (n) {
     form.value = {
       id: n.id,
@@ -186,7 +241,7 @@ function openEditor(n?: any) {
   } else {
     form.value = {
       id: null,
-      courseId: myCourses.value[0]?.id || null,
+      courseId: courseId || myCourses.value[0]?.id || null,
       refType: null,
       refId: null,
       title: '',
@@ -368,6 +423,92 @@ onMounted(async () => {
   gap: 10px;
   font-size: 11.5px;
   color: var(--ink-400);
+}
+
+/* ---------- 笔记文件夹 ---------- */
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+.folder {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.folder:hover {
+  border-color: var(--brand-200);
+  box-shadow: var(--sh-sm);
+  transform: translateY(-2px);
+}
+.fd-ico {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: #fff;
+}
+.fd-body {
+  flex: 1;
+  min-width: 0;
+}
+.fd-body b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 650;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fd-body span {
+  font-size: 11.5px;
+  color: var(--ink-400);
+}
+.fd-arrow {
+  color: var(--ink-300);
+  font-size: 13px;
+  flex: none;
+}
+
+.fd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.fd-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.fd-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--ink-100);
+  background: var(--surface);
+  color: var(--ink-500);
+  border-radius: var(--r-pill);
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.16s;
+}
+.fd-back:hover {
+  border-color: var(--brand-200);
+  color: var(--brand);
 }
 
 /* ---------- 笔记 ---------- */

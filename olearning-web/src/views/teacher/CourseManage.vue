@@ -33,7 +33,7 @@
       <article v-for="c in filtered" :key="c.id" class="row">
         <div
           class="cover"
-          :style="c.cover ? { backgroundImage: `url(${c.cover})`, backgroundSize: 'cover', backgroundPosition: 'center' } : { background: coverOf(c.id) }"
+          :style="coverStyle(c)"
         >
           <span v-if="!c.cover">{{ c.title }}</span>
         </div>
@@ -201,7 +201,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 import FileUploader from '@/components/FileUploader.vue'
 
 const router = useRouter()

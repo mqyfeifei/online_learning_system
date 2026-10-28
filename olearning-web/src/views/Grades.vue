@@ -16,7 +16,7 @@
           <span class="st-ico st-ico--violet"><el-icon><EditPen /></el-icon></span>
           <span class="st-label">测验次数</span>
         </div>
-        <b class="st-num">{{ records.length }}<i>次</i></b>
+        <b class="st-num">{{ filteredRecords.length }}<i>次</i></b>
         <p class="st-sub">及格率 {{ passRate }}%</p>
       </div>
 
@@ -104,19 +104,46 @@
     <section class="ol-card">
       <div class="ol-card-title">
         <h2 class="ol-h2">测验记录</h2>
-        <span class="ol-muted">共 {{ records.length }} 次</span>
+        <span class="ol-muted">共 {{ filteredRecords.length }} 次</span>
       </div>
-      <div v-if="records.length" class="rec-list">
-        <div v-for="r in records" :key="r.record.id" class="rec-row">
-          <div class="rec-score" :class="{ pass: r.record.passed === 1 }">
+
+      <div class="course-bar">
+        <button class="c-chip" :class="{ on: !filterCourseId }" @click="filterCourseId = null">
+          全部课程<i>{{ records.length }}</i>
+        </button>
+        <button
+          v-for="c in recordCourses"
+          :key="c.courseId"
+          class="c-chip"
+          :class="{ on: filterCourseId === c.courseId }"
+          @click="filterCourseId = c.courseId"
+        >
+          {{ c.courseTitle }}<i>{{ c.count }}</i>
+        </button>
+        <span v-if="!recordCourses.length" class="ol-muted">还没有按课程归类的测验记录</span>
+      </div>
+
+      <div v-if="filteredRecords.length" class="rec-list">
+        <div v-for="r in filteredRecords" :key="r.record.id" class="rec-row">
+          <div class="rec-score" :class="{ pass: r.record.passed === 1, stale: r.current === false }">
             <b>{{ r.record.score }}</b>
             <span>/ {{ r.totalScore || 100 }}</span>
           </div>
           <div class="rec-body">
-            <b>{{ r.paperTitle }}</b>
-            <p>交卷时间：{{ fmt(r.record.submitTime) }}</p>
+            <div class="rec-top">
+              <span class="course-tag">
+                <el-icon><Collection /></el-icon>{{ r.courseTitle || '未关联课程' }}
+              </span>
+              <b>{{ r.paperTitle }}</b>
+            </div>
+            <p>
+              交卷时间：{{ fmt(r.record.submitTime) }}
+              <template v-if="r.chapterTitle"> · {{ r.chapterTitle }}</template>
+              <template v-if="r.current === false"> · 试卷已重新发布，需重新作答</template>
+            </p>
           </div>
-          <span class="chip" :class="r.record.passed === 1 ? 'chip--green' : 'chip--brand'">
+          <span v-if="r.current === false" class="chip chip--violet">历史作答</span>
+          <span v-else class="chip" :class="r.record.passed === 1 ? 'chip--green' : 'chip--brand'">
             {{ r.record.passed === 1 ? '及格' : '未及格' }}
           </span>
           <el-button text type="primary" @click="viewDetail(r.record.id)">查看解析</el-button>
@@ -124,7 +151,7 @@
       </div>
       <div v-else class="ol-empty">
         <span class="icon">📝</span>
-        还没有测验记录，去课程里做一套随堂测验吧
+        {{ filterCourseId ? '这门课还没有测验记录' : '还没有测验记录，去课程里做一套随堂测验吧' }}
       </div>
     </section>
 
@@ -133,12 +160,18 @@
       <div class="ol-card-title">
         <h2 class="ol-h2">作业与测验明细</h2>
       </div>
-      <el-table v-if="items.length" :data="items" stripe style="width: 100%">
+      <el-table v-if="filteredItems.length" :data="filteredItems" stripe style="width: 100%">
         <el-table-column label="类型" width="110">
           <template #default="{ row }">
             <span class="chip" :class="row.type === '作业' ? 'chip--amber' : 'chip--violet'">
               {{ row.type }}
             </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="课程 / 名称" min-width="220">
+          <template #default="{ row }">
+            <b class="tbl-title">{{ row.title }}</b>
+            <span class="ol-muted"> · {{ row.courseTitle || '未关联课程' }}</span>
           </template>
         </el-table-column>
         <el-table-column label="分数" width="150">
@@ -155,6 +188,34 @@
         </el-table-column>
       </el-table>
       <div v-else class="ol-empty">暂无成绩明细</div>
+    </section>
+
+    <!-- ==================== 按课程汇总 ==================== -->
+    <section class="ol-card" v-if="courseStats.length">
+      <div class="ol-card-title">
+        <h2 class="ol-h2">各课程成绩</h2>
+        <span class="ol-muted">按课程维度看自己的学习产出</span>
+      </div>
+      <div class="cs-grid">
+        <div
+          v-for="g in courseStats"
+          :key="g.courseId"
+          class="cs-card"
+          :class="{ on: filterCourseId === g.courseId }"
+          @click="filterCourseId = filterCourseId === g.courseId ? null : g.courseId"
+        >
+          <div class="cs-head">
+            <b>{{ g.courseTitle }}</b>
+            <span class="chip">{{ g.count }} 次</span>
+          </div>
+          <div class="cs-num">
+            <b>{{ g.average }}</b>
+            <span>平均分</span>
+          </div>
+          <div class="bar"><i :style="{ width: Math.min(100, g.average || 0) + '%' }" /></div>
+          <p class="ol-muted">最高 {{ g.max }} 分</p>
+        </div>
+      </div>
     </section>
 
     <!-- 答卷详情 -->
@@ -218,6 +279,8 @@ const summary = ref<any>({})
 const records = ref<any[]>([])
 const dialog = ref(false)
 const detail = ref<any>(null)
+/** 课程筛选：null 表示全部课程 */
+const filterCourseId = ref<number | null>(null)
 
 const chartW = 560
 const chartH = 150
@@ -227,10 +290,45 @@ const items = computed(() => {
   return [...list].sort((a, b) => (a.time < b.time ? 1 : -1))
 })
 
+/** 选了课程就只看这门课的明细 */
+const filteredItems = computed(() =>
+  filterCourseId.value
+    ? items.value.filter((i: any) => i.courseId === filterCourseId.value)
+    : items.value
+)
+
+/** 课程维度的成绩汇总（后端已按课程算好平均分与最高分） */
+const courseStats = computed(() => (summary.value.courseStats || []) as any[])
+
+/** 记录里出现过的课程，做成筛选标签 */
+const recordCourses = computed(() => {
+  const map = new Map<number, { courseId: number; courseTitle: string; count: number }>()
+  records.value.forEach((r: any) => {
+    if (r.courseId == null) return
+    const hit = map.get(r.courseId)
+    if (hit) {
+      hit.count++
+    } else {
+      map.set(r.courseId, {
+        courseId: r.courseId,
+        courseTitle: r.courseTitle || '未关联课程',
+        count: 1
+      })
+    }
+  })
+  return [...map.values()]
+})
+
+const filteredRecords = computed(() =>
+  filterCourseId.value
+    ? records.value.filter((r: any) => r.courseId === filterCourseId.value)
+    : records.value
+)
+
 const passRate = computed(() => {
-  if (!records.value.length) return 0
-  const passed = records.value.filter((r) => r.record.passed === 1).length
-  return Math.round((passed / records.value.length) * 100)
+  if (!filteredRecords.value.length) return 0
+  const passed = filteredRecords.value.filter((r) => r.record.passed === 1).length
+  return Math.round((passed / filteredRecords.value.length) * 100)
 })
 
 const maxScore = computed(() => {
@@ -536,6 +634,160 @@ onMounted(async () => {
 .rec-score.pass {
   background: var(--green-soft);
   color: #1f7a4f;
+}
+/* 试卷重新发布后作废的历史作答，用灰底区分 */
+.rec-score.stale {
+  background: var(--surface-sunken);
+  color: var(--ink-400);
+}
+.rec-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin-bottom: 2px;
+}
+.rec-top b {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.course-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  max-width: 170px;
+  padding: 2px 9px;
+  border-radius: var(--r-pill);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 课程筛选条 ---------- */
+.course-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.c-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--ink-100);
+  background: var(--surface);
+  color: var(--ink-500);
+  font-size: 12.5px;
+  font-weight: 550;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.16s;
+}
+.c-chip:hover {
+  border-color: var(--brand-200);
+  color: var(--brand);
+}
+.c-chip i {
+  font-style: normal;
+  font-size: 10.5px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--surface-sunken);
+  color: var(--ink-400);
+}
+.c-chip.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.c-chip.on i {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+}
+
+/* ---------- 各课程成绩 ---------- */
+.cs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.cs-card {
+  padding: 14px;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.cs-card:hover {
+  border-color: var(--brand-200);
+  background: var(--surface-soft);
+}
+.cs-card.on {
+  border-color: var(--brand);
+  background: var(--brand-50);
+}
+.cs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cs-head b {
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cs-num {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.cs-num b {
+  font-size: 22px;
+  font-weight: 760;
+  color: var(--brand);
+  letter-spacing: -0.5px;
+}
+.cs-num span {
+  font-size: 11px;
+  color: var(--ink-400);
+}
+.cs-card .bar {
+  height: 6px;
+  border-radius: 4px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.cs-card .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--brand-300), var(--brand));
+}
+.cs-card p {
+  margin: 0;
+  font-size: 11.5px;
+}
+
+.tbl-title {
+  font-weight: 620;
 }
 .rec-score b {
   font-size: 19px;

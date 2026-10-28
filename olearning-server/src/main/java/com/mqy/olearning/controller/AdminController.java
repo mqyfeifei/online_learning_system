@@ -45,6 +45,12 @@ public class AdminController {
         return Result.ok(userService.adminPage(keyword, role, current, size));
     }
 
+    @Operation(summary = "待启用教师列表（教师注册后待审核，管理端提醒用）")
+    @GetMapping("/users/pending-teachers")
+    public Result<List<SysUser>> pendingTeachers() {
+        return Result.ok(userService.pendingTeachers());
+    }
+
     @Operation(summary = "启用/禁用（教师注册审核也走这里）")
     @PostMapping("/users/{id}/status")
     public Result<Void> updateStatus(@PathVariable Long id, @RequestParam Integer status) {
@@ -56,6 +62,13 @@ public class AdminController {
     @PostMapping("/users/{id}/reset")
     public Result<Void> resetPassword(@PathVariable Long id) {
         userService.resetPassword(id);
+        return Result.ok();
+    }
+
+    @Operation(summary = "管理员修改用户资料：真实姓名、学号/职工号、用户名、手机号")
+    @PutMapping("/users/{id}")
+    public Result<Void> updateUser(@PathVariable Long id, @RequestBody SysUser dto) {
+        userService.adminUpdateUser(id, dto);
         return Result.ok();
     }
 

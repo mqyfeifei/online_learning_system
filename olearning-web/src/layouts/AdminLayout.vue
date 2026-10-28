@@ -100,6 +100,7 @@ const userStore = useUserStore()
 
 const collapsed = ref(false)
 const pendingAudit = ref(0)
+const pendingTeachers = ref<any[]>([])
 
 const isAdmin = computed(() => userStore.role === 'ADMIN')
 const pageTitle = computed(
@@ -116,7 +117,12 @@ const teacherMenus = [
 
 const adminMenus = computed(() => [
   { path: '/admin/dashboard', label: '平台统计', icon: 'PieChart' },
-  { path: '/admin/users', label: '用户管理', icon: 'UserFilled' },
+  {
+    path: '/admin/users',
+    label: '用户管理',
+    icon: 'UserFilled',
+    badge: pendingTeachers.value.length || ''
+  },
   {
     path: '/admin/audit',
     label: '课程审核',
@@ -143,6 +149,12 @@ onMounted(async () => {
     pendingAudit.value = page.total || 0
   } catch {
     pendingAudit.value = 0
+  }
+  // 待启用教师账号提醒：侧栏「用户管理」显示数字徽标
+  try {
+    pendingTeachers.value = (await request.get('/api/admin/users/pending-teachers')) || []
+  } catch {
+    pendingTeachers.value = []
   }
 })
 </script>

@@ -1,0 +1,249 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n179" name="页面-1">
+    <mxGraphModel dx="2370" dy="813" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2080" pageHeight="2400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="f_user" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="用户" vertex="1">
+          <mxGeometry height="60" width="190" x="335" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="f_course" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="课程" vertex="1">
+          <mxGeometry height="60" width="190" x="1615" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="f_notice" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="系统公告" vertex="1">
+          <mxGeometry height="60" width="190" x="341" y="674" as="geometry" />
+        </mxCell>
+        <mxCell id="f_notice_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="公告ID" vertex="1">
+          <mxGeometry height="46" width="144" x="321" y="562" as="geometry" />
+        </mxCell>
+        <mxCell id="n140" edge="1" parent="1" source="f_notice" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_notice_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_notice_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="标题" vertex="1">
+          <mxGeometry height="46" width="144" x="542" y="543" as="geometry" />
+        </mxCell>
+        <mxCell id="n141" edge="1" parent="1" source="f_notice" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_notice_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_notice_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="置顶标志" vertex="1">
+          <mxGeometry height="46" width="144" x="616" y="681" as="geometry" />
+        </mxCell>
+        <mxCell id="n142" edge="1" parent="1" source="f_notice" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_notice_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_asg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="作业" vertex="1">
+          <mxGeometry height="60" width="190" x="985" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="f_asg_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="作业ID" vertex="1">
+          <mxGeometry height="46" width="144" x="1242" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="n143" edge="1" parent="1" source="f_asg" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_asg_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_asg_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="截止时间" vertex="1">
+          <mxGeometry height="46" width="144" x="918" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="n144" edge="1" parent="1" source="f_asg" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_asg_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_asg_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="模板附件" vertex="1">
+          <mxGeometry height="46" width="144" x="1090" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="n145" edge="1" parent="1" source="f_asg" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_asg_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_paper" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="试卷" vertex="1">
+          <mxGeometry height="60" width="190" x="1584" y="1142" as="geometry" />
+        </mxCell>
+        <mxCell id="f_paper_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="试卷ID" vertex="1">
+          <mxGeometry height="46" width="144" x="1434" y="977" as="geometry" />
+        </mxCell>
+        <mxCell id="n146" edge="1" parent="1" source="f_paper" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_paper_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_paper_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="总分" vertex="1">
+          <mxGeometry height="46" width="144" x="1546" y="903" as="geometry" />
+        </mxCell>
+        <mxCell id="n147" edge="1" parent="1" source="f_paper" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_paper_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_paper_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="考试时长" vertex="1">
+          <mxGeometry height="46" width="144" x="1661" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="n148" edge="1" parent="1" source="f_paper" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_paper_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_post" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="讨论帖" vertex="1">
+          <mxGeometry height="60" width="190" x="335" y="1357" as="geometry" />
+        </mxCell>
+        <mxCell id="f_post_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="帖子ID" vertex="1">
+          <mxGeometry height="46" width="144" x="311" y="1567" as="geometry" />
+        </mxCell>
+        <mxCell id="n149" edge="1" parent="1" source="f_post" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_post_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_post_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="标题" vertex="1">
+          <mxGeometry height="46" width="144" x="413" y="1511" as="geometry" />
+        </mxCell>
+        <mxCell id="n150" edge="1" parent="1" source="f_post" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_post_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_post_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="有帮助数" vertex="1">
+          <mxGeometry height="46" width="144" x="510" y="1454" as="geometry" />
+        </mxCell>
+        <mxCell id="n151" edge="1" parent="1" source="f_post" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_post_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_q" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="题目" vertex="1">
+          <mxGeometry height="60" width="190" x="1584" y="1490" as="geometry" />
+        </mxCell>
+        <mxCell id="f_q_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="题目ID" vertex="1">
+          <mxGeometry height="46" width="144" x="1538" y="1663" as="geometry" />
+        </mxCell>
+        <mxCell id="n152" edge="1" parent="1" source="f_q" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_q_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_q_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="题型" vertex="1">
+          <mxGeometry height="46" width="144" x="1434" y="1606" as="geometry" />
+        </mxCell>
+        <mxCell id="n153" edge="1" parent="1" source="f_q" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_q_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_q_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="参考答案" vertex="1">
+          <mxGeometry height="46" width="144" x="1657" y="1616" as="geometry" />
+        </mxCell>
+        <mxCell id="n154" edge="1" parent="1" source="f_q" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_q_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_rec" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="考试记录" vertex="1">
+          <mxGeometry height="60" width="190" x="990" y="1142" as="geometry" />
+        </mxCell>
+        <mxCell id="f_rec_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="记录ID" vertex="1">
+          <mxGeometry height="46" width="144" x="973" y="1025.5" as="geometry" />
+        </mxCell>
+        <mxCell id="n155" edge="1" parent="1" source="f_rec" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_rec_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_rec_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="客观得分" vertex="1">
+          <mxGeometry height="46" width="144" x="1140" y="1023" as="geometry" />
+        </mxCell>
+        <mxCell id="n156" edge="1" parent="1" source="f_rec" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_rec_a1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_rec_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="批阅状态" vertex="1">
+          <mxGeometry height="46" width="144" x="1264" y="1064" as="geometry" />
+        </mxCell>
+        <mxCell id="n157" edge="1" parent="1" source="f_rec" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_rec_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_reply" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#2f5597;fontSize=24;fontStyle=1;strokeWidth=2;" value="讨论回复" vertex="1">
+          <mxGeometry height="60" width="190" x="872" y="1357" as="geometry" />
+        </mxCell>
+        <mxCell id="f_reply_a0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;fontStyle=4;strokeWidth=2;" value="回复ID" vertex="1">
+          <mxGeometry height="46" width="144" x="753" y="1509" as="geometry" />
+        </mxCell>
+        <mxCell id="n158" edge="1" parent="1" source="f_reply" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_reply_a0" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="f_reply_a1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="回复内容" vertex="1">
+          <mxGeometry height="46" width="144" x="1045" y="1472" as="geometry" />
+        </mxCell>
+        <mxCell id="n159" edge="1" parent="1" source="f_reply" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1095.5164318602947" y="1474.163130638682" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="f_reply_a2" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#2f5597;fontSize=24;strokeWidth=2;" value="回复时间" vertex="1">
+          <mxGeometry height="46" width="144" x="931" y="1527" as="geometry" />
+        </mxCell>
+        <mxCell id="n160" edge="1" parent="1" source="f_reply" style="html=1;endArrow=none;strokeColor=#2f5597;strokeWidth=2;fontSize=24;" target="f_reply_a2" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_assign" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="布置" vertex="1">
+          <mxGeometry height="76" width="128" x="1333" y="792" as="geometry" />
+        </mxCell>
+        <mxCell id="n161" edge="1" parent="1" source="f_course" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_assign" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n162" edge="1" parent="1" source="g_assign" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_asg" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_submit" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="提交" vertex="1">
+          <mxGeometry height="76" width="128" x="691" y="792" as="geometry" />
+        </mxCell>
+        <mxCell id="n163" edge="1" parent="1" source="f_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_submit" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n164" edge="1" parent="1" source="g_submit" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_asg" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_post" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="发帖" vertex="1">
+          <mxGeometry height="76" width="128" x="437" y="1076" as="geometry" />
+        </mxCell>
+        <mxCell id="n165" edge="1" parent="1" source="f_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_post" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n166" edge="1" parent="1" source="g_post" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_post" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_help" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="有帮助" vertex="1">
+          <mxGeometry height="76" width="128" x="285" y="1076" as="geometry" />
+        </mxCell>
+        <mxCell id="n167" edge="1" parent="1" source="f_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_help" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n168" edge="1" parent="1" source="g_help" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_post" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_reply" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="回复" vertex="1">
+          <mxGeometry height="76" width="128" x="607" y="1349" as="geometry" />
+        </mxCell>
+        <mxCell id="n169" edge="1" parent="1" source="f_post" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_reply" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n170" edge="1" parent="1" source="g_reply" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_reply" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_make" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="组卷" vertex="1">
+          <mxGeometry height="76" width="128" x="1615" y="1287" as="geometry" />
+        </mxCell>
+        <mxCell id="n171" edge="1" parent="1" source="f_paper" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_make" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n172" edge="1" parent="1" source="g_make" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_q" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_mark" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="批阅" vertex="1">
+          <mxGeometry height="76" width="128" x="1280" y="1304" as="geometry" />
+        </mxCell>
+        <mxCell id="n173" edge="1" parent="1" source="f_rec" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_mark" value="m">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n174" edge="1" parent="1" source="g_mark" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_q" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_match" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="对应" vertex="1">
+          <mxGeometry height="76" width="128" x="1328" y="1134" as="geometry" />
+        </mxCell>
+        <mxCell id="n175" edge="1" parent="1" source="f_paper" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_match" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n176" edge="1" parent="1" source="g_match" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_rec" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g_join" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#bf8f00;fontSize=24;strokeWidth=2;" value="参加" vertex="1">
+          <mxGeometry height="76" width="128" x="700" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="n177" edge="1" parent="1" source="f_user" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="g_join" value="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="n178" edge="1" parent="1" source="g_join" style="html=1;endArrow=none;strokeColor=#333333;strokeWidth=2;fontSize=24;fontColor=#333333;labelBackgroundColor=#ffffff;" target="f_rec" value="n">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=14;fontColor=#555555;whiteSpace=wrap;" value="说明：虚线矩形为在其他分图中已完整绘制的实体，此处仅示意联系关系；“提交”“有帮助”“组卷”“批阅”为多对多联系，分别转换为作业提交表、有帮助表、试卷题目表、批阅明细表。" vertex="1">
+          <mxGeometry height="60" width="1150" x="120" y="2260" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

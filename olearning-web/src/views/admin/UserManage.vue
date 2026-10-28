@@ -19,7 +19,7 @@
     <section class="ap-toolbar">
       <el-input
         v-model="query.keyword"
-        placeholder="搜索用户名或姓名"
+        placeholder="搜索学号、用户名或姓名"
         clearable
         style="width: 240px"
         :prefix-icon="Search"
@@ -51,9 +51,15 @@
                 </span>
                 <div>
                   <b>{{ row.realName || '未填写姓名' }}</b>
-                  <span>@{{ row.username }}</span>
+                  <span>@{{ row.username }} · {{ row.userNo || '—' }}</span>
                 </div>
               </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="学号/职工号" width="150">
+            <template #default="{ row }">
+              <b class="mono-no">{{ row.userNo || '—' }}</b>
             </template>
           </el-table-column>
 
@@ -81,8 +87,9 @@
             <template #default="{ row }">{{ fmt(row.createTime) }}</template>
           </el-table-column>
 
-          <el-table-column label="操作" width="230" align="right">
+          <el-table-column label="操作" width="300" align="right">
             <template #default="{ row }">
+              <el-button link type="primary" @click="openEdit(row)">编辑资料</el-button>
               <el-button
                 v-if="row.status !== 1"
                 link
@@ -136,8 +143,9 @@
       <div class="imp-spec">
         <b>格式要求</b>
         <ul>
-          <li>每行一个用户，逗号分隔，列顺序固定：<code>用户名,真实姓名,角色,手机号,初始密码</code></li>
-          <li>用户名：4–20 位字母、数字或下划线，不能与已有账号重复</li>
+          <li>每行一个用户，逗号分隔，列顺序固定：<code>学号/职工号,用户名,真实姓名,角色,手机号,初始密码</code></li>
+          <li>学号/职工号：4–32 位字母、数字、- 或 _，全平台唯一，学生用它登录</li>
+          <li>用户名：3–20 位昵称，可重复修改，不用于登录</li>
           <li>角色：只能填 <code>STUDENT</code> 或 <code>TEACHER</code>（教师导入后仍需在列表里启用）</li>
           <li>手机号可留空；初始密码可留空，默认 <code>123456</code></li>
           <li>首行表头可以保留，导入时会自动跳过</li>
@@ -165,7 +173,7 @@
         v-model="importText"
         type="textarea"
         :rows="8"
-        placeholder="student3,张三,STUDENT,13800000005,123456"
+        placeholder="20210003,student3,张三,STUDENT,13800000005,123456"
       />
 
       <div v-if="importResult" class="imp-result">
@@ -175,7 +183,7 @@
         </div>
         <div v-if="importResult.failed.length" class="ir-list">
           <div v-for="(f, i) in importResult.failed" :key="i" class="ir-row">
-            第 {{ f.line }} 行 · {{ f.username || '（空）' }} —— {{ f.reason }}
+            第 {{ f.line }} 行 · {{ f.userNo || f.username || '（空）' }} —— {{ f.reason }}
           </div>
         </div>
       </div>
@@ -183,6 +191,33 @@
       <template #footer>
         <el-button @click="importDialog = false">关闭</el-button>
         <el-button type="primary" :loading="importing" @click="doImport">开始导入</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 编辑资料（管理员可以改真实姓名与学号） -->
+    <el-dialog append-to-body v-model="editDialog" title="编辑用户资料" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="真实姓名">
+          <el-input v-model="editForm.realName" placeholder="用于作业、成绩与教师端显示" />
+        </el-form-item>
+        <div class="two">
+          <el-form-item label="学号 / 职工号">
+            <el-input v-model="editForm.userNo" placeholder="4-32 位字母、数字、- 或 _" />
+          </el-form-item>
+          <el-form-item label="用户名（昵称）">
+            <el-input v-model="editForm.username" placeholder="3-20 位" />
+          </el-form-item>
+        </div>
+        <el-form-item label="手机号">
+          <el-input v-model="editForm.phone" maxlength="11" placeholder="选填" />
+        </el-form-item>
+        <p class="edit-tip">
+          学号/职工号是学生登录用的账号，改动后请通知对方用新号登录；真实姓名只有管理员能改。
+        </p>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialog = false">取消</el-button>
+        <el-button type="primary" :loading="editSaving" @click="saveEdit">保存</el-button>
       </template>
     </el-dialog>
   </div>
@@ -254,6 +289,52 @@ async function doImport() {
     load(1)
   } finally {
     importing.value = false
+  }
+}
+
+// ---------------- 编辑资料 ----------------
+const editDialog = ref(false)
+const editSaving = ref(false)
+const editForm = ref<any>({ id: null, realName: '', userNo: '', username: '', phone: '' })
+
+function openEdit(row: any) {
+  editForm.value = {
+    id: row.id,
+    realName: row.realName || '',
+    userNo: row.userNo || '',
+    username: row.username || '',
+    phone: row.phone || ''
+  }
+  editDialog.value = true
+}
+
+async function saveEdit() {
+  const f = editForm.value
+  if (!/^[A-Za-z0-9_-]{4,32}$/.test(f.userNo)) {
+    ElMessage.warning('学号/职工号为 4-32 位字母、数字、- 或 _')
+    return
+  }
+  if (f.username.length < 3 || f.username.length > 20) {
+    ElMessage.warning('用户名长度 3-20 位')
+    return
+  }
+  if (f.phone && !/^1\d{10}$/.test(f.phone)) {
+    ElMessage.warning('手机号格式不正确')
+    return
+  }
+  editSaving.value = true
+  try {
+    await request.put(`/api/admin/users/${f.id}`, {
+      realName: f.realName,
+      userNo: f.userNo,
+      username: f.username,
+      phone: f.phone
+    })
+    ElMessage.success('资料已更新')
+    editDialog.value = false
+    load(query.current)
+  } finally {
+    editSaving.value = false
   }
 }
 
@@ -372,6 +453,22 @@ onMounted(() => load(1))
 }
 
 /* ---------- 批量导入 ---------- */
+.mono-no {
+  font-size: 12.5px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.edit-tip {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink-400);
+}
 .imp-spec {
   background: var(--surface-soft);
   border: 1px solid var(--ink-100);

@@ -37,7 +37,7 @@
         </div>
       </div>
 
-      <p class="bs-foot">计算机软件综合开发实训 · Spring Boot 3 + Vue 3</p>
+      <p class="bs-foot">Spring Boot 3 + Vue 3</p>
     </aside>
 
     <!-- 右侧表单 -->
@@ -47,11 +47,11 @@
         <p class="sub">登录后继续你的学习进度</p>
 
         <el-form :model="form" label-position="top" @keyup.enter="submit">
-          <el-form-item label="用户名">
+          <el-form-item label="学号 / 职工号">
             <el-input
-              v-model="form.username"
+              v-model="form.account"
               size="large"
-              placeholder="请输入用户名"
+              placeholder="学生填学号，教师填职工号"
               :prefix-icon="User"
             />
           </el-form-item>
@@ -89,12 +89,12 @@
           <div class="demo-grid">
             <button
               v-for="d in demos"
-              :key="d.username"
+              :key="d.account"
               class="demo-btn"
-              @click="fill(d.username)"
+              @click="fill(d.account)"
             >
               <b>{{ d.label }}</b>
-              <span>{{ d.username }}</span>
+              <span>{{ d.account }}</span>
             </button>
           </div>
         </div>
@@ -115,27 +115,27 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const loading = ref(false)
-const form = reactive({ username: '', password: '' })
+const form = reactive({ account: '', password: '' })
 
 const demos = [
-  { label: '学生', username: 'student1' },
-  { label: '教师', username: 'teacher1' },
-  { label: '管理员', username: 'admin' }
+  { label: '学生', account: '20210001' },
+  { label: '教师', account: 'T000001' },
+  { label: '管理员', account: 'A000001' }
 ]
 
-function fill(username: string) {
-  form.username = username
+function fill(account: string) {
+  form.account = account
   form.password = '123456'
 }
 
 async function submit() {
-  if (!form.username || !form.password) {
-    ElMessage.warning('请输入用户名和密码')
+  if (!form.account || !form.password) {
+    ElMessage.warning('请输入学号/职工号和密码')
     return
   }
   loading.value = true
   try {
-    const data: any = await userStore.login(form.username, form.password)
+    const data: any = await userStore.login(form.account, form.password)
     ElMessage.success(`欢迎回来，${data.realName || data.username}`)
     // 登录后按角色落到该去的地方，其次回到拦截前的页面
     const redirect = route.query.redirect as string

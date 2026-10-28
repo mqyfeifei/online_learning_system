@@ -58,8 +58,9 @@
         class="card"
         @click="router.push(`/courses/${c.id}`)"
       >
-        <div class="cover-wrap" :style="{ background: coverOf(c.id) }">
-          <div class="cover-mask">
+        <div class="cover-wrap" :style="coverStyle(c)">
+          <!-- 渐变兜底时才叠加课程名/简介；真实封面图不再叠文字，避免和图内文字混在一起 -->
+          <div v-if="!c.cover" class="cover-mask">
             <b>{{ c.title }}</b>
             <p>{{ c.description }}</p>
           </div>
@@ -113,7 +114,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import request from '@/utils/request'
-import { coverOf } from '@/utils/cover'
+import { coverOf, coverStyle } from '@/utils/cover'
 
 const route = useRoute()
 const router = useRouter()

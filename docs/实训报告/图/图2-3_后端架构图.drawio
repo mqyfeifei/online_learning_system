@@ -1,0 +1,82 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
+  <diagram id="n107" name="页面-1">
+    <mxGraphModel dx="1383" dy="708" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1160" pageHeight="740" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="HTTP 请求（Authorization: Bearer &amp;lt;JWT&amp;gt;）" vertex="1">
+          <mxGeometry height="34" width="460" x="270" y="29" as="geometry" />
+        </mxCell>
+        <mxCell id="b0" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;" value="config / security 框架层" vertex="1">
+          <mxGeometry height="80" width="912" x="40" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="w0" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="WebConfig：跨域 + 拦截器注册" vertex="1">
+          <mxGeometry height="36" width="300" x="90" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="w1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="JwtInterceptor：解析 token → UserContext → 校验 @RequireRole" vertex="1">
+          <mxGeometry height="36" width="467" x="430" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="b1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;" value="controller 控制层（按访问身份分组）" vertex="1">
+          <mxGeometry height="90" width="908" x="40" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;" value="service 业务层（业务规则 + 事务）" vertex="1">
+          <mxGeometry height="135" width="910" x="39" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="ExamService 判分组卷批阅" vertex="1">
+          <mxGeometry height="40" width="210" x="60" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="CourseService / ChapterService / EnrollmentService" vertex="1">
+          <mxGeometry height="40" width="280" x="290" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AssignmentService / StudyService / StatsService" vertex="1">
+          <mxGeometry height="40" width="250" x="590" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="DocPreviewService / FileService / ExportService / QuestionIOService / DiscussionService / UserService / NoticeService / CategoryService / CourseWorkService" vertex="1">
+          <mxGeometry height="36" width="878" x="54" y="378" as="geometry" />
+        </mxCell>
+        <mxCell id="b3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;" value="mapper 持久层（MyBatis-Plus，20 个 Mapper）" vertex="1">
+          <mxGeometry height="80" width="533" x="40" y="444" as="geometry" />
+        </mxCell>
+        <mxCell id="mp" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="BaseMapper 通用 CRUD + LambdaQueryWrapper 条件构造 + 分页插件" vertex="1">
+          <mxGeometry height="34" width="459" x="90" y="478" as="geometry" />
+        </mxCell>
+        <mxCell id="b4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;align=left;spacingLeft=8;" value="公共与模型" vertex="1">
+          <mxGeometry height="80" width="914" x="40" y="541" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="entity 实体（20 张表映射）" vertex="1">
+          <mxGeometry height="34" width="191" x="90" y="572" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="dto 请求 / 响应对象" vertex="1">
+          <mxGeometry height="34" width="148" x="293" y="572" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="common：Result 统一响应 / BusinessException / GlobalExceptionHandler" vertex="1">
+          <mxGeometry height="34" width="420" x="457" y="572" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#d5e8d4;strokeColor=#82b366;" value="MySQL 9.2 online_learning" vertex="1">
+          <mxGeometry height="63" width="181" x="743" y="463.5" as="geometry" />
+        </mxCell>
+        <mxCell id="n105" edge="1" parent="1" source="mp" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="db" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AuthController 登录注册" vertex="1">
+          <mxGeometry height="49" width="144.46721311475412" x="49" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="PublicController 公开接口" vertex="1">
+          <mxGeometry height="49" width="144.46721311475412" x="202.13524590163934" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="StudentController StudyController" vertex="1">
+          <mxGeometry height="49" width="114.95" x="354.05" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="TeacherController 教师端" vertex="1">
+          <mxGeometry height="49" width="144.46721311475412" x="481.2254098360655" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="AdminController 管理端" vertex="1">
+          <mxGeometry height="49" width="144.46721311475412" x="634.2868852459015" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="FileController / PublicFileController / ExportController" vertex="1">
+          <mxGeometry height="49" width="139.6516393442623" x="787.9983606557377" y="211" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
