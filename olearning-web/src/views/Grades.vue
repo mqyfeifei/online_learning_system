@@ -272,15 +272,37 @@
                 {{ d.correct ? '正确' : '错误' }}
               </span>
             </div>
+            <!-- 选择题：列出选项，正确答案标绿、选错的标红 -->
+            <div v-if="isChoice(d)" class="opt-list">
+              <div
+                v-for="o in optionsOf(d)"
+                :key="o.key"
+                class="opt"
+                :class="{
+                  'opt--right': isRightKey(d, o.key),
+                  'opt--wrong': isWrongPick(d, o.key)
+                }"
+              >
+                <i class="opt-key">{{ o.key }}</i>
+                <span class="opt-text">{{ o.text }}</span>
+                <em v-if="isRightKey(d, o.key)" class="opt-tag">正确答案</em>
+                <em v-else-if="isWrongPick(d, o.key)" class="opt-tag opt-tag--bad">你的选择</em>
+              </div>
+            </div>
             <div class="q-ans">
-              你的答案：<b :class="{ 'ans-bad': !d.correct }">{{ d.yourAnswer || '未作答' }}</b>
-              <template v-if="d.rightAnswer">
-                <span class="sep">|</span>
-                正确答案：<b class="ans-ok">{{ d.rightAnswer }}</b>
+              <template v-if="d.type === 5">
+                你的作答：<b>{{ plainText(d.yourAnswer) || '未作答' }}</b>
+                <template v-if="d.referenceAnswer">
+                  <span class="sep">|</span>
+                  参考答案：<b class="ans-ok">{{ d.referenceAnswer }}</b>
+                </template>
               </template>
-              <template v-if="d.referenceAnswer">
-                <span class="sep">|</span>
-                参考答案：<b class="ans-ok">{{ d.referenceAnswer }}</b>
+              <template v-else>
+                你的答案：<b :class="{ 'ans-bad': !d.correct }">{{ answerLabel(d, d.yourAnswer) || '未作答' }}</b>
+                <template v-if="d.rightAnswer">
+                  <span class="sep">|</span>
+                  正确答案：<b class="ans-ok">{{ answerLabel(d, d.rightAnswer) }}</b>
+                </template>
               </template>
             </div>
             <div v-if="d.comment" class="q-analysis">
@@ -299,6 +321,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import request from '@/utils/request'
+import { answerLabel, isChoice, isRightKey, isWrongPick, optionsOf } from '@/utils/quiz'
 
 const summary = ref<any>({})
 const records = ref<any[]>([])
@@ -455,6 +478,16 @@ function clearFilter() {
 
 function fmt(t: string) {
   return t ? t.replace('T', ' ').slice(0, 16) : ''
+}
+
+/** 问答题作答是富文本，详情弹窗里只显示纯文本 */
+function plainText(html?: string) {
+  if (!html) return ''
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 async function viewDetail(id: number) {
@@ -997,6 +1030,73 @@ onMounted(async () => {
 .q-ans {
   font-size: 12.5px;
   color: var(--ink-500);
+}
+/* ---------- 答卷详情的选项列表 ---------- */
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-700);
+  background: var(--surface);
+}
+.opt-key {
+  font-style: normal;
+  font-weight: 700;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  background: var(--surface-sunken);
+  color: var(--ink-500);
+}
+.opt-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+.opt-tag {
+  font-style: normal;
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--green-soft);
+  color: var(--green);
+}
+.opt-tag--bad {
+  background: #fdecea;
+  color: #c0392b;
+}
+.opt--right {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.opt--right .opt-key {
+  background: var(--green);
+  color: #fff;
+}
+.opt--wrong {
+  border-color: #e7a5a0;
+  background: #fdf3f2;
+}
+.opt--wrong .opt-key {
+  background: #c0392b;
+  color: #fff;
 }
 .q-ans b {
   font-weight: 650;

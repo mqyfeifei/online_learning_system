@@ -69,6 +69,23 @@
                 {{ d.correct ? '正确' : '错误' }}
               </span>
             </div>
+            <!-- 选择题：把选项列出来，正确答案标绿、选错的标红 -->
+            <div v-if="isChoice(d)" class="opt-list">
+              <div
+                v-for="o in optionsOf(d)"
+                :key="o.key"
+                class="opt"
+                :class="{
+                  'opt--right': isRightKey(d, o.key),
+                  'opt--wrong': isWrongPick(d, o.key)
+                }"
+              >
+                <i class="opt-key">{{ o.key }}</i>
+                <span class="opt-text">{{ o.text }}</span>
+                <em v-if="isRightKey(d, o.key)" class="opt-tag">正确答案</em>
+                <em v-else-if="isWrongPick(d, o.key)" class="opt-tag opt-tag--bad">你的选择</em>
+              </div>
+            </div>
             <div class="q-ans">
               <template v-if="d.type === 5">
                 <div class="ans-line">我的作答：</div>
@@ -83,10 +100,10 @@
                 </div>
               </template>
               <template v-else>
-                你的答案：<b :class="{ bad: !d.correct }">{{ d.yourAnswer || '未作答' }}</b>
+                你的答案：<b :class="{ bad: !d.correct }">{{ answerLabel(d, d.yourAnswer) || '未作答' }}</b>
                 <span v-if="d.rightAnswer" class="sep">|</span>
                 <template v-if="d.rightAnswer">
-                  正确答案：<b class="ok-txt">{{ d.rightAnswer }}</b>
+                  正确答案：<b class="ok-txt">{{ answerLabel(d, d.rightAnswer) }}</b>
                 </template>
               </template>
             </div>
@@ -306,6 +323,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
 import RichEditor from '@/components/RichEditor.vue'
+import { answerLabel, isChoice, isRightKey, isWrongPick, optionsOf } from '@/utils/quiz'
 
 const route = useRoute()
 const router = useRouter()
@@ -1104,6 +1122,73 @@ onUnmounted(() => {
 .q-ans {
   font-size: 12.5px;
   color: var(--ink-500);
+}
+/* ---------- 逐题解析的选项列表 ---------- */
+.opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.opt {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 11px;
+  border: 1px solid var(--ink-100);
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-700);
+  background: var(--surface);
+}
+.opt-key {
+  font-style: normal;
+  font-weight: 700;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  background: var(--surface-sunken);
+  color: var(--ink-500);
+}
+.opt-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+.opt-tag {
+  font-style: normal;
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--green-soft);
+  color: var(--green);
+}
+.opt-tag--bad {
+  background: #fdecea;
+  color: #c0392b;
+}
+.opt--right {
+  border-color: var(--green);
+  background: var(--green-soft);
+}
+.opt--right .opt-key {
+  background: var(--green);
+  color: #fff;
+}
+.opt--wrong {
+  border-color: #e7a5a0;
+  background: #fdf3f2;
+}
+.opt--wrong .opt-key {
+  background: #c0392b;
+  color: #fff;
 }
 .q-ans b {
   font-weight: 650;

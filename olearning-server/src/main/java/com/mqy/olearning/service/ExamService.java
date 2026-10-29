@@ -394,6 +394,7 @@ public class ExamService {
             detail.setQuestionId(q.getId());
             detail.setType(type);
             detail.setTitle(q.getTitle());
+            detail.setOptions(parseOptions(q.getOptionsJson()));
             detail.setYourAnswer(your);
             detail.setFullScore(fullScore);
             detail.setRightAnswer(q.getAnswer());
@@ -667,6 +668,7 @@ public class ExamService {
             detail.setQuestionId(q.getId());
             detail.setType(type);
             detail.setTitle(q.getTitle());
+            detail.setOptions(parseOptions(q.getOptionsJson()));
             detail.setYourAnswer(your);
             detail.setFullScore(fullScore);
             detail.setRightAnswer(q.getAnswer());

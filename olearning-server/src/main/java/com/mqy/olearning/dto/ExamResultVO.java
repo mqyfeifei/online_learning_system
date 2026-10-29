@@ -28,6 +28,8 @@ public class ExamResultVO {
         /** 1 单选 2 多选 3 判断 4 填空 5 问答 */
         private Integer type;
         private String title;
+        /** 选择题的选项 [{key:"A", text:"..."}]，学生看解析时需要看到选项内容 */
+        private java.util.List<java.util.Map<String, String>> options;
         private String yourAnswer;
         private String rightAnswer;
         /** 问答题的参考答案，学生答卷详情里也会展示，便于对照 */
