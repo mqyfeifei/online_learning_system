@@ -1,5 +1,14 @@
 <template>
   <div class="grades fade-up">
+    <!-- 当前筛选范围：选标签后整页数据同步 -->
+    <div v-if="filterCourseId" class="scope-bar">
+      <span class="scope-tag">
+        <el-icon><Filter /></el-icon>当前范围：{{ filterCourseTitle }}
+      </span>
+      <span class="scope-hint">统计卡、趋势、等级分布与下方明细均已按这门课重新统计</span>
+      <el-button text type="primary" size="small" @click="clearFilter">查看全部课程</el-button>
+    </div>
+
     <!-- ==================== 统计卡 ==================== -->
     <section class="stats">
       <div class="stat">
@@ -7,8 +16,8 @@
           <span class="st-ico st-ico--brand"><el-icon><Trophy /></el-icon></span>
           <span class="st-label">平均分</span>
         </div>
-        <b class="st-num">{{ summary.average || 0 }}<i>分</i></b>
-        <div class="bar"><i :style="{ width: Math.min(100, summary.average || 0) + '%' }" /></div>
+        <b class="st-num">{{ scopedStats.average }}<i>分</i></b>
+        <div class="bar"><i :style="{ width: Math.min(100, scopedStats.average || 0) + '%' }" /></div>
       </div>
 
       <div class="stat">
@@ -16,8 +25,10 @@
           <span class="st-ico st-ico--violet"><el-icon><EditPen /></el-icon></span>
           <span class="st-label">测验次数</span>
         </div>
-        <b class="st-num">{{ filteredRecords.length }}<i>次</i></b>
-        <p class="st-sub">及格率 {{ passRate }}%</p>
+        <b class="st-num">{{ scopedStats.examCount }}<i>次</i></b>
+        <p class="st-sub">
+          及格率 {{ scopedStats.passRate == null ? '—' : scopedStats.passRate + '%' }}
+        </p>
       </div>
 
       <div class="stat">
@@ -25,8 +36,10 @@
           <span class="st-ico st-ico--green"><el-icon><Document /></el-icon></span>
           <span class="st-label">成绩记录</span>
         </div>
-        <b class="st-num">{{ summary.count || 0 }}<i>条</i></b>
-        <p class="st-sub">含作业与测验</p>
+        <b class="st-num">{{ scopedStats.recordCount }}<i>条</i></b>
+        <p class="st-sub">
+          作业 {{ scopedStats.homeworkCount }} · 测验 {{ scopedStats.examCount }}
+        </p>
       </div>
 
       <div class="stat">
@@ -34,8 +47,8 @@
           <span class="st-ico st-ico--amber"><el-icon><Medal /></el-icon></span>
           <span class="st-label">最高分</span>
         </div>
-        <b class="st-num">{{ maxScore }}<i>分</i></b>
-        <p class="st-sub">{{ maxScore >= 90 ? '状态不错，继续保持' : '还有提升空间' }}</p>
+        <b class="st-num">{{ scopedStats.max }}<i>分</i></b>
+        <p class="st-sub">{{ scopedStats.max >= 90 ? '状态不错，继续保持' : '还有提升空间' }}</p>
       </div>
     </section>
 
@@ -44,7 +57,7 @@
       <section class="ol-card">
         <div class="ol-card-title">
           <h2 class="ol-h2">成绩趋势</h2>
-          <span class="ol-muted">按提交时间排序</span>
+          <span class="ol-muted">{{ scopeLabel }} · 按提交时间排序</span>
         </div>
         <div v-if="trend.length" class="chart">
           <svg :viewBox="`0 0 ${chartW} ${chartH}`" preserveAspectRatio="none" class="chart-svg">
@@ -73,7 +86,9 @@
             <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
           </div>
         </div>
-        <div v-else class="ol-empty" style="padding: 34px 0">还没有成绩数据</div>
+        <div v-else class="ol-empty" style="padding: 34px 0">
+          {{ filterCourseId ? '这门课还没有成绩数据' : '还没有成绩数据' }}
+        </div>
 
         <div v-if="trend.length" class="legend">
           <span v-for="(p, i) in trend" :key="i" class="legend-item">
@@ -87,6 +102,7 @@
       <section class="ol-card">
         <div class="ol-card-title">
           <h2 class="ol-h2">等级分布</h2>
+          <span class="ol-muted">{{ scopeLabel }} · {{ scopedStats.recordCount }} 条成绩</span>
         </div>
         <div class="dist">
           <div v-for="d in distribution" :key="d.label" class="dist-row">
@@ -104,24 +120,27 @@
     <section class="ol-card">
       <div class="ol-card-title">
         <h2 class="ol-h2">测验记录</h2>
-        <span class="ol-muted">共 {{ filteredRecords.length }} 次</span>
+        <span class="ol-muted">{{ scopeLabel }} · 共 {{ filteredRecords.length }} 次</span>
       </div>
 
       <div class="course-bar">
-        <button class="c-chip" :class="{ on: !filterCourseId }" @click="filterCourseId = null">
-          全部课程<i>{{ records.length }}</i>
+        <button class="c-chip" :class="{ on: !filterCourseId }" @click="clearFilter">
+          全部课程<i>{{ allItems.length }}</i>
         </button>
         <button
           v-for="c in recordCourses"
           :key="c.courseId"
           class="c-chip"
           :class="{ on: filterCourseId === c.courseId }"
-          @click="filterCourseId = c.courseId"
+          @click="pickCourse(c.courseId)"
         >
           {{ c.courseTitle }}<i>{{ c.count }}</i>
         </button>
-        <span v-if="!recordCourses.length" class="ol-muted">还没有按课程归类的测验记录</span>
+        <span v-if="!recordCourses.length" class="ol-muted">还没有按课程归类的成绩记录</span>
       </div>
+      <p v-if="recordCourses.length" class="filter-hint">
+        点击课程标签可筛选整页数据，标签上的数字是该课程的成绩条数（作业 + 测验）
+      </p>
 
       <div v-if="filteredRecords.length" class="rec-list">
         <div v-for="r in filteredRecords" :key="r.record.id" class="rec-row">
@@ -151,7 +170,10 @@
       </div>
       <div v-else class="ol-empty">
         <span class="icon">📝</span>
-        {{ filterCourseId ? '这门课还没有测验记录' : '还没有测验记录，去课程里做一套随堂测验吧' }}
+        <template v-if="filterCourseId">
+          {{ filterCourseTitle }} 暂无测验记录{{ filteredItems.length ? '，该课程的成绩见下方明细' : '' }}
+        </template>
+        <template v-else>还没有测验记录，去课程里做一套随堂测验吧</template>
       </div>
     </section>
 
@@ -159,6 +181,7 @@
     <section class="ol-card">
       <div class="ol-card-title">
         <h2 class="ol-h2">作业与测验明细</h2>
+        <span class="ol-muted">{{ scopeLabel }} · 共 {{ filteredItems.length }} 条</span>
       </div>
       <el-table v-if="filteredItems.length" :data="filteredItems" stripe style="width: 100%">
         <el-table-column label="类型" width="110">
@@ -187,14 +210,16 @@
           <template #default="{ row }">{{ fmt(row.time) }}</template>
         </el-table-column>
       </el-table>
-      <div v-else class="ol-empty">暂无成绩明细</div>
+      <div v-else class="ol-empty">
+        {{ filterCourseId ? '这门课还没有成绩明细' : '暂无成绩明细' }}
+      </div>
     </section>
 
     <!-- ==================== 按课程汇总 ==================== -->
     <section class="ol-card" v-if="courseStats.length">
       <div class="ol-card-title">
         <h2 class="ol-h2">各课程成绩</h2>
-        <span class="ol-muted">按课程维度看自己的学习产出</span>
+        <span class="ol-muted">点击卡片可切换筛选，与上方数据联动</span>
       </div>
       <div class="cs-grid">
         <div
@@ -202,7 +227,7 @@
           :key="g.courseId"
           class="cs-card"
           :class="{ on: filterCourseId === g.courseId }"
-          @click="filterCourseId = filterCourseId === g.courseId ? null : g.courseId"
+          @click="pickCourse(g.courseId)"
         >
           <div class="cs-head">
             <b>{{ g.courseTitle }}</b>
@@ -279,68 +304,93 @@ const summary = ref<any>({})
 const records = ref<any[]>([])
 const dialog = ref(false)
 const detail = ref<any>(null)
-/** 课程筛选：null 表示全部课程 */
+/** 课程筛选：null 表示全部课程；切换后整页数据同步刷新 */
 const filterCourseId = ref<number | null>(null)
 
 const chartW = 560
 const chartH = 150
 
-const items = computed(() => {
-  const list = (summary.value.items || []) as any[]
-  return [...list].sort((a, b) => (a.time < b.time ? 1 : -1))
+/** 全量成绩明细（作业 + 测验），按提交时间倒序 */
+const allItems = computed(() => {
+  const list = ((summary.value.items || []) as any[]).filter((i: any) => i && i.score != null)
+  return [...list].sort((a: any, b: any) => (a.time < b.time ? 1 : -1))
 })
-
-/** 选了课程就只看这门课的明细 */
-const filteredItems = computed(() =>
-  filterCourseId.value
-    ? items.value.filter((i: any) => i.courseId === filterCourseId.value)
-    : items.value
-)
 
 /** 课程维度的成绩汇总（后端已按课程算好平均分与最高分） */
 const courseStats = computed(() => (summary.value.courseStats || []) as any[])
 
-/** 记录里出现过的课程，做成筛选标签 */
+/** 课程标签：明细与测验记录里出现过的课程取并集，只有作业的课程也能筛出来 */
 const recordCourses = computed(() => {
-  const map = new Map<number, { courseId: number; courseTitle: string; count: number }>()
+  const itemCounts = new Map<number, number>()
+  const recordCounts = new Map<number, number>()
+  const titles = new Map<number, string>()
+  allItems.value.forEach((i: any) => {
+    if (i.courseId == null) return
+    itemCounts.set(i.courseId, (itemCounts.get(i.courseId) || 0) + 1)
+    if (!titles.has(i.courseId)) titles.set(i.courseId, i.courseTitle)
+  })
   records.value.forEach((r: any) => {
     if (r.courseId == null) return
-    const hit = map.get(r.courseId)
-    if (hit) {
-      hit.count++
-    } else {
-      map.set(r.courseId, {
-        courseId: r.courseId,
-        courseTitle: r.courseTitle || '未关联课程',
-        count: 1
-      })
-    }
+    recordCounts.set(r.courseId, (recordCounts.get(r.courseId) || 0) + 1)
+    if (!titles.has(r.courseId)) titles.set(r.courseId, r.courseTitle)
   })
-  return [...map.values()]
+  const ids = new Set<number>([...itemCounts.keys(), ...recordCounts.keys()])
+  return [...ids]
+    .map((id) => ({
+      courseId: id,
+      courseTitle: titles.get(id) || '未关联课程',
+      count: itemCounts.get(id) || recordCounts.get(id) || 0
+    }))
+    .sort((a, b) => b.count - a.count)
 })
 
+/** 当前筛选的课程名 */
+const filterCourseTitle = computed(() => {
+  if (!filterCourseId.value) return ''
+  const hit =
+    courseStats.value.find((g: any) => g.courseId === filterCourseId.value) ||
+    recordCourses.value.find((c: any) => c.courseId === filterCourseId.value)
+  return hit?.courseTitle || '当前课程'
+})
+
+/** 各处文案统一用的范围描述 */
+const scopeLabel = computed(() => (filterCourseId.value ? filterCourseTitle.value : '全部课程'))
+
+/** 当前筛选范围内的成绩明细（表格 + 趋势 + 等级分布都用它） */
+const filteredItems = computed(() =>
+  filterCourseId.value
+    ? allItems.value.filter((i: any) => i.courseId === filterCourseId.value)
+    : allItems.value
+)
+
+/** 当前筛选范围内的测验记录 */
 const filteredRecords = computed(() =>
   filterCourseId.value
     ? records.value.filter((r: any) => r.courseId === filterCourseId.value)
     : records.value
 )
 
-const passRate = computed(() => {
-  if (!filteredRecords.value.length) return 0
-  const passed = filteredRecords.value.filter((r) => r.record.passed === 1).length
-  return Math.round((passed / filteredRecords.value.length) * 100)
+/** 统计卡：全部由筛选后的数据推导，切标签即同步变化 */
+const scopedStats = computed(() => {
+  const scores = filteredItems.value.map((i: any) => Number(i.score) || 0)
+  const total = scores.reduce((a, b) => a + b, 0)
+  const homework = filteredItems.value.filter((i: any) => i.type === '作业').length
+  const passed = filteredRecords.value.filter((r: any) => r.record?.passed === 1).length
+  return {
+    average: scores.length ? Math.round((total / scores.length) * 10) / 10 : 0,
+    max: scores.length ? Math.max(...scores) : 0,
+    recordCount: scores.length,
+    homeworkCount: homework,
+    examCount: filteredRecords.value.length,
+    passRate: filteredRecords.value.length
+      ? Math.round((passed / filteredRecords.value.length) * 100)
+      : null
+  }
 })
 
-const maxScore = computed(() => {
-  const all = (summary.value.items || []).map((i: any) => i.score || 0)
-  return all.length ? Math.max(...all) : 0
-})
-
-/** 折线图取时间正序的最后 10 条 */
+/** 折线图取当前筛选下时间正序的最后 10 条 */
 const trend = computed(() => {
-  const list = [...((summary.value.items || []) as any[])].sort((a, b) =>
-    a.time < b.time ? -1 : 1
-  )
+  const list = [...filteredItems.value].sort((a: any, b: any) => (a.time < b.time ? -1 : 1))
   return list.slice(-10)
 })
 
@@ -373,8 +423,9 @@ function gradeOf(score: number) {
   return '不及格'
 }
 
+/** 等级分布同样跟随筛选范围 */
 const distribution = computed(() => {
-  const all = (summary.value.items || []).map((i: any) => i.score || 0)
+  const all = filteredItems.value.map((i: any) => i.score || 0)
   const buckets = [
     { label: '优秀 90+', min: 90, color: '#2fa36b' },
     { label: '良好 80-89', min: 80, color: '#7c6cf5' },
@@ -389,9 +440,18 @@ const distribution = computed(() => {
       if (b.min === 0) return s < 60
       return s >= b.min && s < b.min + 10
     }).length
-    return { ...b, count, pct: Math.round((count / total) * 100) }
+    return { ...b, count, pct: all.length ? Math.round((count / total) * 100) : 0 }
   })
 })
+
+/** 点同一个标签再点一次就回到全部课程 */
+function pickCourse(id: number) {
+  filterCourseId.value = filterCourseId.value === id ? null : id
+}
+
+function clearFilter() {
+  filterCourseId.value = null
+}
 
 function fmt(t: string) {
   return t ? t.replace('T', ' ').slice(0, 16) : ''
@@ -414,6 +474,37 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* ---------- 筛选范围条 ---------- */
+.scope-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--brand-200);
+  border-radius: var(--r-md);
+  background: var(--brand-50);
+}
+.scope-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--brand-700);
+}
+.scope-hint {
+  flex: 1;
+  min-width: 200px;
+  font-size: 11.5px;
+  color: var(--ink-500);
+}
+.filter-hint {
+  margin: -4px 0 12px;
+  font-size: 11.5px;
+  color: var(--ink-400);
 }
 
 /* ---------- 统计卡 ---------- */

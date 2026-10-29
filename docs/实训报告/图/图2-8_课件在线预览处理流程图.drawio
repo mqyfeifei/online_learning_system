@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6">
   <diagram id="n120" name="页面-1">
-    <mxGraphModel dx="1439" dy="1695" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="880" math="0" shadow="0">
+    <mxGraphModel dx="2389" dy="1695" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="880" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -11,10 +11,10 @@
           <mxGeometry height="44" width="230" x="210" y="40" as="geometry" />
         </mxCell>
         <mxCell id="d_type" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="判断文件类型" vertex="1">
-          <mxGeometry height="80" width="130" x="500" y="160" as="geometry" />
+          <mxGeometry height="80" width="130" x="260" y="170" as="geometry" />
         </mxCell>
         <mxCell id="pdf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="PDF：iframe 原生渲染" vertex="1">
-          <mxGeometry height="40" width="190" x="700" y="60" as="geometry" />
+          <mxGeometry height="40" width="190" x="760" y="60" as="geometry" />
         </mxCell>
         <mxCell id="img" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="图片：img 标签渲染" vertex="1">
           <mxGeometry height="40" width="190" x="700" y="120" as="geometry" />
@@ -38,10 +38,10 @@
           <mxGeometry height="40" width="200" x="460" y="590" as="geometry" />
         </mxCell>
         <mxCell id="render" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="前端 FilePreview 统一弹窗渲染（多页 / 滚动）" vertex="1">
-          <mxGeometry height="44" width="210" x="200" y="590" as="geometry" />
+          <mxGeometry height="44" width="210" x="-140" y="636" as="geometry" />
         </mxCell>
         <mxCell id="ppt" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="pptx：全屏放映（方向键 / 空格翻页、自动播放、Esc 退出）" vertex="1">
-          <mxGeometry height="56" width="240" x="180" y="680" as="geometry" />
+          <mxGeometry height="56" width="240" x="185" y="760" as="geometry" />
         </mxCell>
         <mxCell id="dl" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="下载按钮：受课程 resource_downloadable 开关控制" vertex="1">
           <mxGeometry height="56" width="220" x="470" y="680" as="geometry" />
@@ -79,11 +79,11 @@
         <mxCell id="n110" edge="1" parent="1" source="ole2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="parse" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="n111" edge="1" parent="1" source="pdf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;" target="render" value="直出">
+        <mxCell id="n111" edge="1" parent="1" source="pdf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" target="render" value="直出">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="795" y="100" />
-              <mxPoint x="150" y="100" />
+              <mxPoint x="700" y="100" />
+              <mxPoint x="-35" y="100" />
             </Array>
           </mxGeometry>
         </mxCell>
